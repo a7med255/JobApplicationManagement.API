@@ -1,14 +1,12 @@
+using System.Reflection;
 using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using JobApplicationManagement.Application.Features.Applications.Interfaces;
-using JobApplicationManagement.Application.Features.Applications.Services;
 using JobApplicationManagement.Application.Features.Identity.Interfaces;
 using JobApplicationManagement.Application.Features.Identity.Services;
 using JobApplicationManagement.Application.Features.Identity.Validators;
 using JobApplicationManagement.Application.Features.Jobs.DTOs;
-using JobApplicationManagement.Application.Features.Jobs.Interfaces;
 using JobApplicationManagement.Application.Features.Jobs.Mappings;
-using JobApplicationManagement.Application.Features.Jobs.Services;
 using JobApplicationManagement.Application.Features.Jobs.Validators;
 
 namespace JobApplicationManagement.Application;
@@ -27,11 +25,13 @@ public static class DependencyInjection
         // FluentValidation — registers all validators in this assembly
         services.AddValidatorsFromAssemblyContaining<CreateJobValidator>();
 
-        // Job feature services
-        services.AddScoped<IJobService, JobService>();
-
-        // Application (job application) feature services
-        services.AddScoped<IApplicationService, ApplicationService>();
+        // MediatR
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(JobApplicationManagement.Application.Common.Behaviors.LoggingBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(JobApplicationManagement.Application.Common.Behaviors.ValidationBehavior<,>));
+        });
 
         // Candidate feature services
         services.AddScoped<JobApplicationManagement.Application.Features.Candidates.Interfaces.ICandidateService, JobApplicationManagement.Application.Features.Candidates.Services.CandidateService>();

@@ -8,6 +8,13 @@ using JobApplicationManagement.Application.Features.Recruiters.Interfaces;
 
 namespace JobApplicationManagement.API.Controllers;
 
+/// <summary>
+/// Provides endpoints for managing recruiters.
+/// </summary>
+/// <remarks>
+/// Administrators have full access to manage all recruiters.
+/// Recruiters can manage their own profiles.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class RecruitersController : ControllerBase
@@ -21,6 +28,19 @@ public class RecruitersController : ControllerBase
         _currentUserService = currentUserService;
     }
 
+    /// <summary>
+    /// Creates a new recruiter profile.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible only by Administrators.
+    /// Note: Recruiters are typically created automatically upon registration.
+    /// </remarks>
+    /// <param name="createDto">Contains recruiter details.</param>
+    /// <returns>The created recruiter profile.</returns>
+    /// <response code="201">Recruiter created successfully.</response>
+    /// <response code="400">Validation failed.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">User lacks the required Admin role.</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(RecruiterResponseDto), StatusCodes.Status201Created)]
@@ -33,6 +53,18 @@ public class RecruitersController : ControllerBase
         return CreatedAtAction(nameof(GetRecruiterById), new { id = response.Id }, response);
     }
 
+    /// <summary>
+    /// Gets a paginated list of all recruiters.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible only by Administrators.
+    /// </remarks>
+    /// <param name="pageNumber">The page number. Default is 1.</param>
+    /// <param name="pageSize">The number of recruiters per page. Default is 10.</param>
+    /// <returns>A paginated list of recruiters.</returns>
+    /// <response code="200">Paginated list returned successfully.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">User lacks the required Admin role.</response>
     [HttpGet]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(PaginatedResult<RecruiterResponseDto>), StatusCodes.Status200OK)]
@@ -44,6 +76,18 @@ public class RecruitersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Retrieves a recruiter's profile by identifier.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible by Administrators and the recruiter who owns the profile.
+    /// </remarks>
+    /// <param name="id">The unique identifier of the recruiter.</param>
+    /// <returns>The detailed recruiter profile.</returns>
+    /// <response code="200">Recruiter found.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">The authenticated user does not own this profile.</response>
+    /// <response code="404">Recruiter was not found.</response>
     [HttpGet("{id:int}")]
     [Authorize(Roles = "Admin,Recruiter")]
     [ProducesResponseType(typeof(RecruiterResponseDto), StatusCodes.Status200OK)]
@@ -56,6 +100,20 @@ public class RecruitersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Updates a recruiter's profile.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible by Administrators and the recruiter who owns the profile.
+    /// </remarks>
+    /// <param name="id">The unique identifier of the recruiter.</param>
+    /// <param name="updateDto">Contains updated recruiter details.</param>
+    /// <returns>The updated recruiter profile.</returns>
+    /// <response code="200">Recruiter updated successfully.</response>
+    /// <response code="400">Validation failed.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">The authenticated user does not own this profile.</response>
+    /// <response code="404">Recruiter was not found.</response>
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin,Recruiter")]
     [ProducesResponseType(typeof(RecruiterResponseDto), StatusCodes.Status200OK)]
@@ -69,6 +127,18 @@ public class RecruitersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Deletes a recruiter profile permanently.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible by Administrators and the recruiter who owns the profile.
+    /// </remarks>
+    /// <param name="id">The unique identifier of the recruiter.</param>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">Recruiter deleted successfully.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">The authenticated user does not own this profile.</response>
+    /// <response code="404">Recruiter was not found.</response>
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin,Recruiter")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

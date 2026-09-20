@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using JobApplicationManagement.Application.Common.Exceptions;
 
@@ -75,10 +76,17 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
+            var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userEmail = context.User?.FindFirstValue(ClaimTypes.Email);
+
             _logger.LogError(
                 ex,
-                "An unexpected error occurred while processing request {TraceId}",
-                context.TraceIdentifier);
+                "An unexpected error occurred while processing {Method} {Path} [TraceId: {TraceId}, UserId: {UserId}, UserEmail: {UserEmail}]",
+                context.Request.Method,
+                context.Request.Path,
+                context.TraceIdentifier,
+                userId ?? "Anonymous",
+                userEmail ?? "N/A");
 
             await WriteErrorResponseAsync(
                 context,

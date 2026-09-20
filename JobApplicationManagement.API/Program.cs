@@ -5,6 +5,7 @@ using JobApplicationManagement.Application.Common.Interfaces;
 using JobApplicationManagement.Infrastructure;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using System.Security.Claims;
 
 // ── Serilog bootstrap logger ──────────────────────────────────────────────────
 Log.Logger = new LoggerConfiguration()
@@ -73,6 +74,10 @@ try
                 Array.Empty<string>()
             }
         });
+
+        var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+        options.IncludeXmlComments(xmlPath);
     });
 
     var app = builder.Build();
@@ -84,7 +89,31 @@ try
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     // ── Serilog Request Logging ───────────────────────────────────────────────
-    app.UseSerilogRequestLogging();
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                diagnosticContext.Set("UserId", userId);
+            }
+
+            var userEmail = httpContext.User.FindFirstValue(ClaimTypes.Email);
+            if (!string.IsNullOrEmpty(userEmail))
+            {
+                diagnosticContext.Set("UserEmail", userEmail);
+            }
+
+            var roles = httpContext.User.FindAll(ClaimTypes.Role).Select(c => c.Value);
+            if (roles.Any())
+            {
+                diagnosticContext.Set("UserRole", string.Join(",", roles));
+            }
+
+            diagnosticContext.Set("TraceId", httpContext.TraceIdentifier);
+        };
+    });
 
     if (app.Environment.IsDevelopment())
     {
@@ -97,6 +126,9 @@ try
     // ── Authentication must come before Authorization ─────────────────────────
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // ── Push user details to Serilog LogContext for business logs ─────────────
+    app.UseMiddleware<RequestContextLoggingMiddleware>();
 
     app.MapControllers();
 
