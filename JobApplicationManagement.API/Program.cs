@@ -39,6 +39,10 @@ try
     // ── ASP.NET Core ──────────────────────────────────────────────────────────
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+    
+    // ── Health Checks ─────────────────────────────────────────────────────────
+    builder.Services.AddHealthChecks()
+        .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
     builder.Services.AddSwaggerGen(options =>
     {
@@ -131,6 +135,7 @@ try
     app.UseMiddleware<RequestContextLoggingMiddleware>();
 
     app.MapControllers();
+    app.MapHealthChecks("/health");
 
     app.Run();
 }
