@@ -18,6 +18,8 @@ public interface IUnitOfWork : IDisposable
 
     IGenericRepository<Recruiter> Recruiters { get; }
 
+    IGenericRepository<SavedJob> SavedJobs { get; }
+
     INotificationService NotificationService { get; }
 
     /// <summary>

@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Candidate> Candidates => Set<Candidate>();
     public DbSet<Recruiter> Recruiters => Set<Recruiter>();
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
+    public DbSet<SavedJob> SavedJobs => Set<SavedJob>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
