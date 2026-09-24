@@ -42,6 +42,9 @@ public static class DependencyInjection
         // Identity feature services
         services.AddScoped<IAuthService, AuthService>();
 
+        // Background Job services
+        services.AddScoped<JobApplicationManagement.Application.Common.Interfaces.IStaleApplicationCleanupJob, JobApplicationManagement.Application.Features.Applications.Services.StaleApplicationCleanupJob>();
+
         return services;
     }
 }

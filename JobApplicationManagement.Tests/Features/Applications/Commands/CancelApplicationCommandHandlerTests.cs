@@ -20,13 +20,15 @@ public class CancelApplicationCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+    private readonly Mock<IBackgroundJob> _backgroundJobMock;
     private readonly CancelApplicationCommandHandler _handler;
 
     public CancelApplicationCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _handler = new CancelApplicationCommandHandler(_unitOfWorkMock.Object, _currentUserServiceMock.Object);
+        _backgroundJobMock = new Mock<IBackgroundJob>();
+        _handler = new CancelApplicationCommandHandler(_unitOfWorkMock.Object, _currentUserServiceMock.Object, _backgroundJobMock.Object);
     }
 
     [Fact]

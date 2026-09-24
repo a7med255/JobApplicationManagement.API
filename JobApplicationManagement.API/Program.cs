@@ -1,8 +1,11 @@
+using Hangfire;
 using JobApplicationManagement.API.Middleware;
 using JobApplicationManagement.API.Services;
 using JobApplicationManagement.Application;
 using JobApplicationManagement.Application.Common.Interfaces;
 using JobApplicationManagement.Infrastructure;
+using JobApplicationManagement.Infrastucture.Repositories;
+using JobApplicationManagement.Infrastucture.Services;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Security.Claims;
@@ -35,6 +38,9 @@ try
     // ── Current User Service ──────────────────────────────────────────────────
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+    builder.Services.AddScoped<IBackgroundJob, HangfireBackgroundJob>();
+    builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 
     // ── ASP.NET Core ──────────────────────────────────────────────────────────
     builder.Services.AddControllers();
@@ -83,7 +89,13 @@ try
         var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
         options.IncludeXmlComments(xmlPath);
     });
+    builder.Services.AddHangfire(config => config
+           .UseSimpleAssemblyNameTypeSerializer()
+           .UseRecommendedSerializerSettings()
+           .UseSqlServerStorage(
+               builder.Configuration.GetConnectionString("HangfireConnection")));
 
+    builder.Services.AddHangfireServer();
     var app = builder.Build();
 
     // ── Seed Roles ────────────────────────────────────────────────────────────
@@ -133,6 +145,14 @@ try
 
     // ── Push user details to Serilog LogContext for business logs ─────────────
     app.UseMiddleware<RequestContextLoggingMiddleware>();
+
+    // ── Hangfire Dashboard & Recurring Jobs ───────────────────────────────────
+    app.UseHangfireDashboard();
+
+    RecurringJob.AddOrUpdate<IStaleApplicationCleanupJob>(
+        "auto-close-stale-applications",
+        job => job.CloseStaleApplicationsAsync(CancellationToken.None),
+        Cron.Daily());
 
     app.MapControllers();
     app.MapHealthChecks("/health");

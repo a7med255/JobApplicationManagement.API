@@ -12,11 +12,15 @@ public class CancelApplicationCommandHandler : IRequestHandler<CancelApplication
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IBackgroundJob _backgroundJob;
 
-    public CancelApplicationCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+
+    public CancelApplicationCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService , IBackgroundJob backgroundJob)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _backgroundJob = backgroundJob;
+
     }
 
     public async Task Handle(CancelApplicationCommand request, CancellationToken cancellationToken)
@@ -51,5 +55,7 @@ public class CancelApplicationCommandHandler : IRequestHandler<CancelApplication
 
         _unitOfWork.JobApplications.Update(application);
         await _unitOfWork.SaveChangesAsync();
+
+        _backgroundJob.Enqueue<INotificationService>(b => b.NotifyCandiate(application.Id));
     }
 }

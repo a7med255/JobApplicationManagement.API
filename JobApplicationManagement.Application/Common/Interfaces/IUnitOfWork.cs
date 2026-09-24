@@ -18,6 +18,8 @@ public interface IUnitOfWork : IDisposable
 
     IGenericRepository<Recruiter> Recruiters { get; }
 
+    INotificationService NotificationService { get; }
+
     /// <summary>
     /// Persists all pending changes to the database within a single transaction.
     /// Returns the number of state entries written.

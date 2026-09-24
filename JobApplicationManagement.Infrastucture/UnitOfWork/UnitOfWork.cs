@@ -18,9 +18,12 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<Candidate>? _candidates;
     private IGenericRepository<Recruiter>? _recruiters;
 
-    public UnitOfWork(ApplicationDbContext context)
+    public INotificationService NotificationService { get; }
+
+    public UnitOfWork(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        NotificationService = notificationService;
     }
 
     /// <inheritdoc/>
