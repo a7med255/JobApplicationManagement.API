@@ -1,0 +1,39 @@
+<section class="hero">
+  <div class="hero__content">
+    <h1 class="hero__title">
+      Find Your Next
+      <span class="hero__gradient">Career Opportunity</span>
+    </h1>
+    <p class="hero__subtitle">
+      Connect with top employers. Discover roles that match your skills and ambitions.
+      Your dream job is just a click away.
+    </p>
+    <div class="hero__actions">
+      @if (auth.isAuthenticated()) {
+        <a routerLink="/jobs" class="btn btn--primary btn--lg">Browse Jobs</a>
+        <a [routerLink]="auth.getDefaultRoute()" class="btn btn--secondary btn--lg">Go to Dashboard</a>
+      } @else {
+        <a routerLink="/register" class="btn btn--primary btn--lg">Get Started</a>
+        <a routerLink="/login" class="btn btn--secondary btn--lg">Sign In</a>
+      }
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-card__icon">🔍</div>
+      <h3 class="feature-card__title">Browse Jobs</h3>
+      <p class="feature-card__desc">Explore curated job listings from top recruiters and companies.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card__icon">📋</div>
+      <h3 class="feature-card__title">Apply Instantly</h3>
+      <p class="feature-card__desc">One-click applications. Track your status in real time.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card__icon">👥</div>
+      <h3 class="feature-card__title">Recruit Talent</h3>
+      <p class="feature-card__desc">Post jobs, review candidates, and manage your hiring pipeline.</p>
+    </div>
+  </div>
+</section>

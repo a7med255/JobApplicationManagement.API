@@ -101,6 +101,29 @@ public class CandidatesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves the authenticated candidate's profile.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible only by the Candidate.
+    /// </remarks>
+    /// <returns>The detailed candidate profile.</returns>
+    /// <response code="200">Candidate found.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">The authenticated user does not have the Candidate role.</response>
+    /// <response code="404">Candidate profile was not found.</response>
+    [HttpGet("mine")]
+    [Authorize(Roles = "Candidate")]
+    [ProducesResponseType(typeof(CandidateResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var response = await _candidateService.GetMyProfileAsync(_currentUserService.UserId!);
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Updates a candidate's profile.
     /// </summary>
     /// <remarks>

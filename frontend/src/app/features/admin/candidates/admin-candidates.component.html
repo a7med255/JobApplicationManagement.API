@@ -1,0 +1,121 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
+      <h1 class="page-header__title mt-3">Candidate Profiles</h1>
+      <p class="page-header__subtitle">{{ totalCount() }} profile{{ totalCount() === 1 ? '' : 's' }}</p>
+    </div>
+  </div>
+
+  @if (actionError()) {
+    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading candidate profiles...</div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-state">
+      <h2 class="error-state__title">{{ errorMessage() }}</h2>
+      <button class="btn btn--secondary" type="button" (click)="loadCandidates()">Retry</button>
+    </div>
+  } @else if (candidates().length === 0) {
+    <div class="empty-state">
+      <h2 class="empty-state__title">No candidate profiles found</h2>
+      <p class="empty-state__message">Candidate profiles are created during candidate registration.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Profile ID</th>
+            <th>Name</th>
+            <th>CV</th>
+            <th>Identity user ID</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (candidate of candidates(); track candidate.id) {
+            <tr>
+              <td>#{{ candidate.id }}</td>
+              <td>
+                @if (editingId() === candidate.id) {
+                  <input
+                    class="form-control table-input"
+                    [formControl]="editForm.controls.name"
+                    aria-label="Candidate name"
+                  />
+                  @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+                    <div class="form-error">A name of at most 200 characters is required.</div>
+                  }
+                } @else {
+                  <strong>{{ candidate.name }}</strong>
+                }
+              </td>
+              <td>
+                @if (editingId() === candidate.id) {
+                  <input
+                    class="form-control table-input"
+                    type="url"
+                    [formControl]="editForm.controls.cvUrl"
+                    aria-label="Candidate CV URL"
+                  />
+                } @else if (candidate.cvUrl) {
+                  <a [href]="candidate.cvUrl" target="_blank" rel="noopener noreferrer">Open CV</a>
+                } @else {
+                  <span class="text-muted">Not provided</span>
+                }
+              </td>
+              <td><code>{{ candidate.userId }}</code></td>
+              <td>
+                <div class="action-buttons">
+                  @if (editingId() === candidate.id) {
+                    <button
+                      class="btn btn--primary btn--sm"
+                      type="button"
+                      [disabled]="pendingId() === candidate.id"
+                      (click)="saveCandidate(candidate.id)"
+                    >
+                      {{ pendingId() === candidate.id ? 'Saving...' : 'Save' }}
+                    </button>
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="cancelEdit()">Cancel</button>
+                  } @else if (confirmDeleteId() === candidate.id) {
+                    <span class="confirmation-text">Delete this profile?</span>
+                    <button
+                      class="btn btn--danger btn--sm"
+                      type="button"
+                      [disabled]="pendingId() === candidate.id"
+                      (click)="deleteCandidate(candidate.id)"
+                    >
+                      {{ pendingId() === candidate.id ? 'Deleting...' : 'Confirm' }}
+                    </button>
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
+                  } @else {
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="startEdit(candidate)">Edit</button>
+                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(candidate.id)">Delete</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="pagination" aria-label="Candidate profile pages">
+        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="previousPage()">
+          Previous
+        </button>
+        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
+          Next
+        </button>
+      </nav>
+    }
+  }
+</div>

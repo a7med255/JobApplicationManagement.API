@@ -1,0 +1,64 @@
+<div class="container">
+  <div class="page-header">
+    <a routerLink="/candidate/dashboard" class="back-link">← Back to Dashboard</a>
+    <h1 class="page-header__title mt-3">Saved Jobs</h1>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading saved jobs...</div>
+    </div>
+  } @else if (isError()) {
+    <div class="error-state">
+      <div class="error-state__icon">⚠️</div>
+      <h3 class="error-state__title">Failed to load saved jobs</h3>
+      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
+      <button class="btn btn--secondary" (click)="loadSavedJobs()">Retry</button>
+    </div>
+  } @else if (savedJobs().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">⭐</div>
+      <h3 class="empty-state__title">No saved jobs</h3>
+      <p class="empty-state__message">You haven't saved any jobs for later.</p>
+      <a routerLink="/jobs" class="btn btn--primary">Browse Jobs</a>
+    </div>
+  } @else {
+    @if (actionError()) {
+      <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
+    }
+    <div class="job-grid">
+      @for (item of savedJobs(); track item.savedJobId) {
+        <app-job-card 
+          [job]="item.job" 
+          [showApply]="true"
+          [showSave]="true"
+          [isSaved]="true"
+          [isSavePending]="removingJobId() === item.job.id"
+          (apply)="onApply($event)"
+          (saveToggle)="onSaveToggle($event)">
+        </app-job-card>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button 
+          class="btn btn--secondary btn--sm" 
+          [disabled]="pageNumber() === 1"
+          aria-label="Go to previous saved-jobs page"
+          (click)="prevPage()">
+          Previous
+        </button>
+        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button 
+          class="btn btn--secondary btn--sm" 
+          [disabled]="pageNumber() === totalPages()"
+          aria-label="Go to next saved-jobs page"
+          (click)="nextPage()">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>

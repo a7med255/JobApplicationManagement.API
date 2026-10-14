@@ -8,6 +8,7 @@ public interface IRecruiterService
     Task<RecruiterResponseDto> CreateRecruiterAsync(CreateRecruiterDto createDto);
     Task<PaginatedResult<RecruiterResponseDto>> GetAllRecruitersAsync(int pageNumber, int pageSize);
     Task<RecruiterResponseDto> GetRecruiterByIdAsync(int id, string userId, IEnumerable<string> roles);
+    Task<RecruiterResponseDto> GetMyProfileAsync(string userId);
     Task<RecruiterResponseDto> UpdateRecruiterAsync(int id, UpdateRecruiterDto updateDto, string userId, IEnumerable<string> roles);
     Task DeleteRecruiterAsync(int id, string userId, IEnumerable<string> roles);
 }

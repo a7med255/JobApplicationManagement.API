@@ -1,0 +1,28 @@
+.back-link {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+
+  &__info {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+}

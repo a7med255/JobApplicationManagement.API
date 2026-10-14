@@ -1,0 +1,86 @@
+<nav class="navbar" id="main-navbar">
+  <div class="navbar__container">
+    <a routerLink="/" class="navbar__brand" (click)="closeMenu()">
+      <span class="navbar__logo">C</span>
+      <span class="navbar__title">{{ appConfig.name }}</span>
+    </a>
+
+    <button
+      class="navbar__toggle"
+      type="button"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen"
+      aria-controls="navbar-menu"
+      aria-label="Toggle navigation menu"
+    >
+      <span class="navbar__toggle-bar"></span>
+      <span class="navbar__toggle-bar"></span>
+      <span class="navbar__toggle-bar"></span>
+    </button>
+
+    <div id="navbar-menu" class="navbar__menu" [class.navbar__menu--open]="menuOpen">
+      <a routerLink="/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Jobs</a>
+      @if (auth.isAuthenticated()) {
+        @if (auth.isCandidate()) {
+          <a routerLink="/candidate/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Dashboard
+          </a>
+          <a routerLink="/candidate/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Applications
+          </a>
+          <a routerLink="/candidate/saved-jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Saved Jobs
+          </a>
+          <a routerLink="/candidate/cvs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">CVs</a>
+          <a routerLink="/candidate/profile" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Profile</a>
+        }
+
+        @if (auth.isRecruiter()) {
+          <a routerLink="/recruiter/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Dashboard
+          </a>
+          <a routerLink="/recruiter/jobs/create" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Post Job
+          </a>
+          <a routerLink="/recruiter/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">My Jobs</a>
+          <a routerLink="/recruiter/company" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Company</a>
+          <a routerLink="/recruiter/profile" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Profile</a>
+          <a routerLink="/recruiter/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Applications
+          </a>
+        }
+
+        @if (auth.isAdmin()) {
+          <a routerLink="/admin/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Dashboard
+          </a>
+          <a routerLink="/admin/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Jobs
+          </a>
+          <a routerLink="/admin/candidates" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Candidates
+          </a>
+          <a routerLink="/admin/recruiters" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Recruiters
+          </a>
+          <a routerLink="/admin/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+            Applications
+          </a>
+        }
+
+        <div class="navbar__user">
+          <span class="navbar__email">{{ auth.userEmail() }}</span>
+          <span class="navbar__role-badge">{{ auth.userRoles()[0] }}</span>
+          <button class="navbar__logout-btn" type="button" (click)="logout()">Logout</button>
+        </div>
+      } @else {
+        <a routerLink="/login" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Login
+        </a>
+        <a routerLink="/register" routerLinkActive="navbar__link--active" class="navbar__link navbar__link--cta" (click)="closeMenu()">
+          Register
+        </a>
+      }
+    </div>
+  </div>
+</nav>

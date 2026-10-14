@@ -28,6 +28,8 @@ public class GetApplicationByIdQueryHandler : IRequestHandler<GetApplicationById
         var application = await _unitOfWork.JobApplications.Query()
             .AsNoTracking()
             .Include(a => a.Job)
+            .Include(a => a.Candidate)
+            .Include(a => a.SubmittedCv)
             .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
         if (application is null)

@@ -1,0 +1,44 @@
+.back-link {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  
+  &:hover { color: var(--text-primary); }
+}
+
+.mt-3 { margin-top: 1rem; }
+
+.job-link {
+  color: var(--color-primary);
+  font-weight: 500;
+  
+  &:hover { text-decoration: underline; }
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirmation-text {
+  color: var(--color-danger);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+
+  &__info {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+}

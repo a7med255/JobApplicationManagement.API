@@ -94,8 +94,92 @@ public class AuthService : IAuthService
 
         _logger.LogInformation("User {UserId} registered successfully with role {Role}", userId, registerDto.Role);
 
-        var roles = new[] { registerDto.Role };
-        return GenerateAuthResponse(userId, registerDto.Email, roles);
+        // Generate OTP for email verification instead of logging in
+        var otp = await _identityService.GenerateEmailVerificationOtpAsync(registerDto.Email);
+
+        return new AuthResponseDto
+        {
+            Email = registerDto.Email,
+            Roles = new[] { registerDto.Role },
+            Otp = otp // Returning OTP directly as requested ("give me otp")
+        };
+    }
+
+    public async Task<string> RequestEmailVerificationOtpAsync(string email)
+    {
+        var otp = await _identityService.GenerateEmailVerificationOtpAsync(email);
+        if (otp is null) throw new NotFoundException("User", email);
+        return otp;
+    }
+
+    public async Task<bool> VerifyEmailAsync(string email, string otp)
+    {
+        var (succeeded, errors) = await _identityService.VerifyEmailOtpAsync(email, otp);
+        if (!succeeded)
+        {
+            throw new AppValidationException(new Dictionary<string, string[]>
+            {
+                { "Verification", errors }
+            });
+        }
+        return true;
+    }
+
+    public async Task<string> ForgotPasswordAsync(string email)
+    {
+        var otp = await _identityService.GeneratePasswordResetOtpAsync(email);
+        if (otp is null) throw new NotFoundException("User", email);
+        return otp; // Return OTP as requested
+    }
+
+    public async Task<bool> ResetPasswordAsync(string email, string otp, string newPassword)
+    {
+        var (succeeded, errors) = await _identityService.ResetPasswordWithOtpAsync(email, otp, newPassword);
+        if (!succeeded)
+        {
+            throw new AppValidationException(new Dictionary<string, string[]>
+            {
+                { "ResetPassword", errors }
+            });
+        }
+        return true;
+    }
+
+    public async Task<AuthResponseDto> ExternalLoginAsync(string provider, string idToken)
+    {
+        // Mocking Google Token Validation for now. In a real scenario, use GoogleJsonWebSignature.ValidateAsync
+        // Here we just assume idToken is an email for demonstration, or a mocked token.
+        // Let's decode it safely assuming it's just an email if this is a test, or mock the email.
+        string email = idToken; // Replace with proper token decoding in production
+        string fullName = "External User";
+
+        var user = await _identityService.GetUserByEmailAsync(email);
+        string userId;
+        IEnumerable<string> roles;
+
+        if (user is null)
+        {
+            // Register as Candidate by default for external logins
+            var (succeeded, newUserId, errors) = await _identityService.CreateExternalUserAsync(email, fullName, "Candidate");
+            if (!succeeded)
+            {
+                throw new AppValidationException(new Dictionary<string, string[]> { { "ExternalLogin", errors } });
+            }
+            
+            userId = newUserId;
+            roles = new[] { "Candidate" };
+
+            var candidate = new Candidate { UserId = userId, Name = fullName };
+            await _unitOfWork.Candidates.AddAsync(candidate);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        else
+        {
+            userId = user.Value.UserId;
+            roles = user.Value.Roles;
+        }
+
+        return GenerateAuthResponse(userId, email, roles);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)

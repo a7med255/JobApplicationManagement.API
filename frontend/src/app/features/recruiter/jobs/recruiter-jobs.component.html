@@ -1,0 +1,31 @@
+<div class="container recruiter-jobs">
+  <div class="page-header"><div><a routerLink="/recruiter/dashboard" class="back-link">&larr; Back to dashboard</a><h1 class="page-header__title mt-3">My jobs</h1></div><a routerLink="/recruiter/jobs/create" class="btn btn--primary">Create job</a></div>
+  @if (errorMessage()) { <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div> }
+  @if (isLoading()) { <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading jobs...</div></div> }
+  @else if (jobs().length === 0) { <div class="empty-state"><h2 class="empty-state__title">No jobs yet</h2><p class="empty-state__message">Create your first job posting after completing your company profile.</p></div> }
+  @else {
+    <div class="table-container"><table><thead><tr><th>Job</th><th>Status</th><th>Posted / deadline</th><th>Actions</th></tr></thead><tbody>
+      @for (job of jobs(); track job.id) {
+        <tr>
+          <td><strong>{{ job.title }}</strong><div class="muted">{{ job.city }}, {{ job.country }}</div></td>
+          <td><span class="badge" [class.badge--active]="job.status === JobStatus.Published" [class.badge--closed]="job.status !== JobStatus.Published">{{ statusLabels[job.status] }}</span></td>
+          <td><div>{{ job.postedAt ? (job.postedAt | date:'mediumDate') : 'Not published' }}</div><div class="muted">Deadline: {{ job.applicationDeadline ? (job.applicationDeadline | date:'mediumDate') : 'Open' }}</div></td>
+          <td><div class="actions">
+            <a [routerLink]="['/jobs', job.id]" class="btn btn--secondary btn--sm">View</a>
+            @if (job.status !== JobStatus.Archived) { <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="btn btn--secondary btn--sm">Edit</a> }
+            @if (job.status === JobStatus.Draft) {
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="publish(job.id)">Publish</button>
+              <button class="btn btn--danger btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="delete(job.id)">Delete</button>
+            } @else if (job.status === JobStatus.Published) {
+              <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="close(job.id)">Close</button>
+            } @else if (job.status === JobStatus.Closed || job.status === JobStatus.Expired) {
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="reopen(job.id)">Reopen</button>
+              <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="archive(job.id)">Archive</button>
+            }
+          </div></td>
+        </tr>
+      }
+    </tbody></table></div>
+    @if (totalPages() > 1) { <nav class="pagination"><button class="btn btn--secondary btn--sm" (click)="previous()" [disabled]="pageNumber() === 1">Previous</button><span>Page {{ pageNumber() }} of {{ totalPages() }}</span><button class="btn btn--secondary btn--sm" (click)="next()" [disabled]="pageNumber() === totalPages()">Next</button></nav> }
+  }
+</div>

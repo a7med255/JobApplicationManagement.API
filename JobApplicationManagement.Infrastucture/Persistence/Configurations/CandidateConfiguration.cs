@@ -20,6 +20,9 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder.Property(c => c.CvUrl)
             .HasMaxLength(2000);
 
+        builder.Property(c => c.ProfileImageUrl)
+            .HasMaxLength(2000);
+
         builder.Property(c => c.UserId)
             .IsRequired()
             .HasMaxLength(450);

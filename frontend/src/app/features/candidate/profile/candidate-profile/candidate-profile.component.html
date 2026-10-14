@@ -1,0 +1,80 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">My Profile</h1>
+      <p class="page-header__subtitle">Manage your personal information and default CV link.</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading your profile...</div>
+    </div>
+  } @else if (isError()) {
+    <div class="alert alert--danger" role="alert">
+      {{ errorMessage() }}
+    </div>
+  } @else {
+    <div class="card">
+      @if (successMessage()) {
+        <div class="alert alert--success mb-4" role="alert">
+          {{ successMessage() }}
+        </div>
+      }
+      
+      @if (errorMessage()) {
+        <div class="alert alert--danger mb-4" role="alert">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="name" class="form-label">Full Name</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="form-control"
+            placeholder="John Doe"
+            [class.ng-invalid]="isFieldInvalid('name')"
+          />
+          @if (isFieldInvalid('name')) {
+            <div class="form-error">Full Name is required (max 200 chars).</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="cvUrl" class="form-label">External CV Link (Optional)</label>
+          <input
+            id="cvUrl"
+            type="url"
+            formControlName="cvUrl"
+            class="form-control"
+            placeholder="https://linkedin.com/in/johndoe"
+            [class.ng-invalid]="isFieldInvalid('cvUrl')"
+          />
+          @if (isFieldInvalid('cvUrl')) {
+            <div class="form-error">Link is too long (max 500 chars).</div>
+          }
+        </div>
+
+        <div class="mt-4">
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [disabled]="isSaving()"
+            [attr.aria-busy]="isSaving()"
+          >
+            @if (isSaving()) {
+              <span class="spinner"></span> Saving...
+            } @else {
+              Save Profile
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

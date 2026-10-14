@@ -154,6 +154,11 @@ try
         job => job.CloseStaleApplicationsAsync(CancellationToken.None),
         Cron.Daily());
 
+    RecurringJob.AddOrUpdate<IJobExpirationService>(
+        "expire-job-postings-after-deadline",
+        service => service.ExpireJobsAsync(CancellationToken.None),
+        Cron.Hourly());
+
     app.MapControllers();
     app.MapHealthChecks("/health");
 

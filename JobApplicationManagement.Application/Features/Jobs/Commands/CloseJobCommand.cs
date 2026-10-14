@@ -1,4 +1,3 @@
-using AutoMapper;
 using JobApplicationManagement.Application.Common.Exceptions;
 using JobApplicationManagement.Application.Common.Interfaces;
 using JobApplicationManagement.Application.Features.Jobs.DTOs;
@@ -8,41 +7,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobApplicationManagement.Application.Features.Jobs.Commands;
 
-public record CloseJobCommand(int Id) : IRequest<CloseJobResponseDto>;
+public record CloseJobCommand(int Id) : IRequest<JobResponseDto>;
 
-public class CloseJobCommandHandler : IRequestHandler<CloseJobCommand, CloseJobResponseDto>
+public class CloseJobCommandHandler : IRequestHandler<CloseJobCommand, JobResponseDto>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public CloseJobCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
+    public CloseJobCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
-    public async Task<CloseJobResponseDto> Handle(CloseJobCommand request, CancellationToken cancellationToken)
+    public async Task<JobResponseDto> Handle(CloseJobCommand request, CancellationToken cancellationToken)
     {
-        var job = await _unitOfWork.Jobs.GetByIdAsync(request.Id);
-        if (job is null)
-            throw new NotFoundException(nameof(Job), request.Id);
+        var job = await LoadJobAsync(request.Id, cancellationToken);
+        await JobAuthorizationHelper.VerifyOwnershipOrAdminAsync(
+            _unitOfWork, job, _currentUserService, "close", cancellationToken);
 
-        await JobAuthorizationHelper.VerifyOwnershipOrAdminAsync(_unitOfWork, job, _currentUserService, "close");
-
-        var userId = _currentUserService.UserId;
-        var recruiter = await _unitOfWork.Recruiters.Query()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.UserId == userId, cancellationToken);
-
-        job.IsActive = false;
-        job.ClosedAt = DateTime.UtcNow;
-        job.ClosedById = recruiter?.Id;
-
+        var actorRecruiterId = await _unitOfWork.Recruiters.Query()
+            .Where(r => r.UserId == _currentUserService.UserId)
+            .Select(r => (int?)r.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        JobLifecycle.Close(job, DateTime.UtcNow, actorRecruiterId);
         _unitOfWork.Jobs.Update(job);
         await _unitOfWork.SaveChangesAsync();
-
-        return _mapper.Map<CloseJobResponseDto>(job);
+        return JobDtoFactory.ToResponse(job);
     }
+
+    private async Task<Job> LoadJobAsync(int id, CancellationToken cancellationToken) =>
+        await _unitOfWork.Jobs.Query()
+            .Include(j => j.Company)
+            .Include(j => j.JobSkills).ThenInclude(js => js.Skill)
+            .FirstOrDefaultAsync(j => j.Id == id, cancellationToken)
+        ?? throw new NotFoundException(nameof(Job), id);
 }

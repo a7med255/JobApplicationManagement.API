@@ -23,6 +23,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
     public DbSet<SavedJob> SavedJobs => Set<SavedJob>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Skill> Skills => Set<Skill>();
+    public DbSet<JobSkill> JobSkills => Set<JobSkill>();
+    public DbSet<CandidateCv> CandidateCvs => Set<CandidateCv>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

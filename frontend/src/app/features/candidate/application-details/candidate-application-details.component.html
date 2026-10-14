@@ -1,0 +1,93 @@
+<div class="container app-details-container">
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading application details...</div>
+    </div>
+  } @else if (isError() || !application()) {
+    <div class="error-state">
+      <div class="error-state__icon">⚠️</div>
+      <h3 class="error-state__title">Application not found</h3>
+      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
+      <a routerLink="/candidate/applications" class="btn btn--secondary">Back to My Applications</a>
+    </div>
+  } @else {
+    <div class="page-header">
+      <a routerLink="/candidate/applications" class="back-link">← Back to My Applications</a>
+    </div>
+
+    <div class="card app-details-card">
+      <div class="app-details-header">
+        <h1 class="app-title">{{ application()?.jobTitle || ('Application for Job #' + application()?.jobId) }}</h1>
+        <app-application-status-badge [status]="application()!.jobApplicationStatus" />
+      </div>
+
+      <div class="app-timeline">
+        <div class="timeline-item">
+          <div class="timeline-label">Applied On</div>
+          <div class="timeline-value">{{ application()?.appliedAt | date:'fullDate' }} at {{ application()?.appliedAt | date:'shortTime' }}</div>
+        </div>
+        @if (application()?.statusUpdatedAt && application()!.statusUpdatedAt !== application()!.appliedAt) {
+          <div class="timeline-item">
+            <div class="timeline-label">Last Updated</div>
+            <div class="timeline-value">{{ application()?.statusUpdatedAt | date:'fullDate' }} at {{ application()?.statusUpdatedAt | date:'shortTime' }}</div>
+          </div>
+        }
+        @if (application()?.cancelledAt) {
+          <div class="timeline-item">
+            <div class="timeline-label">Cancelled On</div>
+            <div class="timeline-value">
+              {{ application()?.cancelledAt | date:'fullDate' }} at {{ application()?.cancelledAt | date:'shortTime' }}
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (cancelSuccess()) {
+        <div class="alert alert--success" role="status">The application was cancelled.</div>
+      }
+
+      @if (showCancelConfirmation()) {
+        <div class="cancel-confirmation" role="alertdialog" aria-labelledby="cancel-title" aria-describedby="cancel-description">
+          <h2 id="cancel-title">Cancel this application?</h2>
+          <p id="cancel-description">This action is available only while the application is Applied or Under Review.</p>
+          @if (cancelError()) {
+            <div class="alert alert--danger" role="alert">{{ cancelError() }}</div>
+          }
+          <div class="cancel-confirmation__actions">
+            <button class="btn btn--secondary" type="button" (click)="dismissCancellation()" [disabled]="isCancelling()">
+              Keep Application
+            </button>
+            <button
+              class="btn btn--danger"
+              type="button"
+              (click)="confirmCancellation()"
+              [disabled]="isCancelling()"
+              [attr.aria-busy]="isCancelling()"
+            >
+              {{ isCancelling() ? 'Cancelling...' : 'Confirm Cancellation' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <div class="app-actions">
+        <a [routerLink]="['/jobs', application()?.jobId]" class="btn btn--secondary">View Original Job Post</a>
+        @if (application()?.submittedCvId) {
+          <button class="btn btn--secondary" type="button" (click)="downloadSubmittedCv()" [disabled]="isDownloadingCv()">
+            {{ isDownloadingCv() ? 'Downloading...' : 'Download ' + (application()?.submittedCvDisplayName || 'submitted CV') }}
+          </button>
+        }
+        
+        @if (application()?.jobApplicationStatus === AppStatus.Applied || application()?.jobApplicationStatus === AppStatus.UnderReview) {
+          <button 
+            class="btn btn--danger" 
+            (click)="requestCancellation()"
+            [disabled]="isCancelling() || showCancelConfirmation()">
+            Cancel Application
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

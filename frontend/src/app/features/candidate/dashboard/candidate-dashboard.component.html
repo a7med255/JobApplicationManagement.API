@@ -1,0 +1,63 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Candidate Dashboard</h1>
+      <p class="page-header__subtitle">Welcome back, {{ authService.userEmail() }}</p>
+    </div>
+    <a routerLink="/jobs" class="btn btn--primary">Browse New Jobs</a>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading your dashboard...</div>
+    </div>
+  } @else {
+    @if (hasPartialError()) {
+      <div class="alert alert--danger" role="alert">
+        Some dashboard totals could not be loaded. You can still use the links below.
+      </div>
+    }
+    <div class="stats-grid">
+      <a class="stat-card stat-card--hoverable" routerLink="/candidate/applications">
+        <h3 class="stat-card__label">Total Applications</h3>
+        <div class="stat-card__value">{{ totalApplications() }}</div>
+      </a>
+      <a class="stat-card stat-card--hoverable" routerLink="/candidate/saved-jobs">
+        <h3 class="stat-card__label">Saved Jobs</h3>
+        <div class="stat-card__value">{{ savedJobsCount() }}</div>
+      </a>
+    </div>
+
+    <div class="dashboard-actions">
+      <div class="card dashboard-action-card">
+        <div class="action-icon" aria-hidden="true">&#128196;</div>
+        <h3>Manage CVs</h3>
+        <p>Upload CV versions and choose your default for applications.</p>
+        <a routerLink="/candidate/cvs" class="btn btn--secondary mt-auto">My CVs</a>
+      </div>
+
+      <div class="card dashboard-action-card">
+        <div class="action-icon">📋</div>
+        <h3>My Applications</h3>
+        <p>Track the status of your submitted job applications.</p>
+        <a routerLink="/candidate/applications" class="btn btn--secondary mt-auto">View Applications</a>
+      </div>
+      
+      <div class="card dashboard-action-card">
+        <div class="action-icon">👤</div>
+        <h3>My Profile</h3>
+        <p>Update your personal information and default external CV link.</p>
+        <a routerLink="/candidate/profile" class="btn btn--secondary mt-auto">Manage Profile</a>
+      </div>
+      
+      <div class="card dashboard-action-card">
+        <div class="action-icon">⭐</div>
+        <h3>Saved Jobs</h3>
+        <p>Review jobs you've saved to apply for later.</p>
+        <a routerLink="/candidate/saved-jobs" class="btn btn--secondary mt-auto">View Saved Jobs</a>
+      </div>
+
+    </div>
+  }
+</div>

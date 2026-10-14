@@ -16,4 +16,16 @@ public interface IIdentityService
         string email, string password);
 
     Task<(string UserId, string Email, IEnumerable<string> Roles)?> GetUserByIdAsync(string userId);
+
+    Task<(string UserId, string Email, IEnumerable<string> Roles)?> GetUserByEmailAsync(string email);
+
+    Task<string?> GenerateEmailVerificationOtpAsync(string email);
+    
+    Task<(bool Succeeded, string[] Errors)> VerifyEmailOtpAsync(string email, string otp);
+
+    Task<string?> GeneratePasswordResetOtpAsync(string email);
+
+    Task<(bool Succeeded, string[] Errors)> ResetPasswordWithOtpAsync(string email, string otp, string newPassword);
+
+    Task<(bool Succeeded, string UserId, string[] Errors)> CreateExternalUserAsync(string email, string fullName, string role);
 }

@@ -8,6 +8,7 @@ using JobApplicationManagement.Application.Features.Identity.Validators;
 using JobApplicationManagement.Application.Features.Jobs.DTOs;
 using JobApplicationManagement.Application.Features.Jobs.Mappings;
 using JobApplicationManagement.Application.Features.Jobs.Validators;
+using JobApplicationManagement.Application.Common.Interfaces;
 
 namespace JobApplicationManagement.Application;
 
@@ -44,6 +45,7 @@ public static class DependencyInjection
 
         // Background Job services
         services.AddScoped<JobApplicationManagement.Application.Common.Interfaces.IStaleApplicationCleanupJob, JobApplicationManagement.Application.Features.Applications.Services.StaleApplicationCleanupJob>();
+        services.AddScoped<IJobExpirationService, JobApplicationManagement.Application.Features.Jobs.Services.JobExpirationService>();
 
         return services;
     }

@@ -1,0 +1,85 @@
+<div class="container review-container">
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading application details...</div>
+    </div>
+  } @else if (errorMessage() || !application()) {
+    <div class="error-state">
+      <div class="error-state__icon">⚠️</div>
+      <h3 class="error-state__title">{{ errorMessage() || 'Application not found.' }}</h3>
+      <a [routerLink]="backRoute()" class="btn btn--secondary">Back to Applications</a>
+    </div>
+  } @else {
+    <div class="page-header">
+      <a [routerLink]="backRoute()" class="back-link">&larr; Back to Applications</a>
+    </div>
+
+    <div class="card review-card">
+      <div class="review-header">
+        <div>
+          <h1 class="app-title">Application #{{ application()!.id }}</h1>
+          <p class="app-subtitle">{{ application()!.candidateName || ('Candidate #' + application()!.candidateId) }} applied for <a [routerLink]="['/jobs', application()!.jobId]">{{ application()!.jobTitle || ('Job #' + application()!.jobId) }}</a></p>
+          @if (application()!.submittedCvId) {
+            <button class="btn btn--secondary btn--sm mt-2" type="button" (click)="downloadSubmittedCv()" [disabled]="isDownloadingCv()">
+              {{ isDownloadingCv() ? 'Downloading...' : 'Open ' + (application()!.submittedCvDisplayName || 'submitted CV') }}
+            </button>
+          }
+        </div>
+        <app-application-status-badge [status]="application()!.jobApplicationStatus" />
+      </div>
+
+      <div class="app-timeline">
+        <div class="timeline-item">
+          <div class="timeline-label">Applied On</div>
+          <div class="timeline-value">{{ application()?.appliedAt | date:'fullDate' }}</div>
+        </div>
+        @if (application()?.statusUpdatedAt && application()!.statusUpdatedAt !== application()!.appliedAt) {
+          <div class="timeline-item">
+            <div class="timeline-label">Last Updated</div>
+            <div class="timeline-value">{{ application()?.statusUpdatedAt | date:'fullDate' }}</div>
+          </div>
+        }
+      </div>
+
+      <div class="status-update-section">
+        <h3>Update Application Status</h3>
+        
+        <div class="status-form">
+          <div class="form-group mb-0">
+            <label class="form-label" for="application-status">New status</label>
+            <select
+              id="application-status"
+              class="form-control"
+              [formControl]="statusControl"
+            >
+              @for (opt of statusOptions; track opt.value) {
+                <option [ngValue]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <button 
+            class="btn btn--primary" 
+            (click)="updateStatus()"
+            [disabled]="isUpdating() || statusControl.value === application()!.jobApplicationStatus || application()!.jobApplicationStatus === applicationStatus.Cancelled"
+            [attr.aria-busy]="isUpdating()"
+          >
+            {{ isUpdating() ? 'Updating...' : 'Update Status' }}
+          </button>
+        </div>
+        
+        @if (updateSuccess()) {
+          <div class="alert alert--success mt-2" role="status">Application status updated.</div>
+        }
+
+        @if (updateError()) {
+          <div class="alert alert--danger mt-2" role="alert">{{ updateError() }}</div>
+        }
+
+        @if (application()!.jobApplicationStatus === applicationStatus.Cancelled) {
+          <p class="mt-2 text-danger">This application was cancelled by the candidate and cannot be updated.</p>
+        }
+      </div>
+    </div>
+  }
+</div>

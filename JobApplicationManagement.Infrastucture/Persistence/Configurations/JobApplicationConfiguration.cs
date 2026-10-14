@@ -25,6 +25,11 @@ public class JobApplicationConfiguration : IEntityTypeConfiguration<JobApplicati
             .HasForeignKey(ja => ja.JobId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(ja => ja.SubmittedCv)
+            .WithMany(cv => cv.Applications)
+            .HasForeignKey(ja => ja.SubmittedCvId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Prevent duplicate applications for the same job by the same candidate
         builder.HasIndex(ja => new { ja.CandidateId, ja.JobId })
             .IsUnique();

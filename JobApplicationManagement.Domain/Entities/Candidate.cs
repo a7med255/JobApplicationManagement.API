@@ -16,4 +16,8 @@ public class Candidate
     /// Used for ownership verification when cancelling applications.
     /// </summary>
     public string UserId { get; set; } = string.Empty;
+
+    public string? ProfileImageUrl { get; set; }
+
+    public ICollection<CandidateCv> Cvs { get; set; } = new List<CandidateCv>();
 }

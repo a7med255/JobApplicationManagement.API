@@ -1,0 +1,49 @@
+<div class="container cv-page">
+  <div class="page-header">
+    <div>
+      <a routerLink="/candidate/dashboard" class="back-link">&larr; Back to dashboard</a>
+      <h1 class="page-header__title mt-3">My CVs</h1>
+      <p class="page-header__subtitle">Keep multiple CV versions and choose the right one for each application.</p>
+    </div>
+  </div>
+
+  @if (errorMessage()) { <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div> }
+
+  <section class="card upload-card">
+    <h2>Upload a new CV</h2>
+    <form [formGroup]="uploadForm" (ngSubmit)="upload()" class="upload-form">
+      <div class="form-group">
+        <label class="form-label" for="cv-name">CV name</label>
+        <input id="cv-name" class="form-control" formControlName="displayName" placeholder="e.g. Frontend Engineer CV">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cv-file">File (PDF, DOC or DOCX, max 5 MB)</label>
+        <input id="cv-file" class="form-control" type="file" accept=".pdf,.doc,.docx" (change)="chooseFile($event)">
+      </div>
+      <label class="default-check"><input type="checkbox" formControlName="setAsDefault"> Make this my default CV</label>
+      <button class="btn btn--primary" type="submit" [disabled]="isUploading()">{{ isUploading() ? 'Uploading...' : 'Upload CV' }}</button>
+    </form>
+  </section>
+
+  <section class="cv-list" aria-live="polite">
+    @if (isLoading()) {
+      <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading CVs...</div></div>
+    } @else if (cvs().length === 0) {
+      <div class="empty-state"><h2 class="empty-state__title">No CVs uploaded</h2><p class="empty-state__message">Upload your first CV to start applying.</p></div>
+    } @else {
+      @for (cv of cvs(); track cv.id) {
+        <article class="card cv-card">
+          <div>
+            <div class="cv-card__title-row"><h2>{{ cv.displayName }}</h2>@if (cv.isDefault) { <span class="badge badge--active">Default</span> }</div>
+            <p>{{ cv.originalFileName }} · {{ cv.fileSize / 1024 | number:'1.0-0' }} KB · Uploaded {{ cv.uploadedAt | date:'mediumDate' }}</p>
+          </div>
+          <div class="cv-card__actions">
+            <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === cv.id" (click)="download(cv)">Download</button>
+            @if (!cv.isDefault) { <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === cv.id" (click)="setDefault(cv.id)">Set default</button> }
+            <button class="btn btn--danger btn--sm" type="button" [disabled]="pendingId() === cv.id" (click)="delete(cv.id)">Delete</button>
+          </div>
+        </article>
+      }
+    }
+  </section>
+</div>

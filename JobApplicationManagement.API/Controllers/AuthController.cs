@@ -87,4 +87,54 @@ public class AuthController : ControllerBase
         var result = await _authService.RefreshTokenAsync(refreshTokenDto);
         return Ok(result);
     }
+
+    [HttpPost("verify-email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDto dto)
+    {
+        _logger.LogInformation("Email verification attempt for {Email}", dto.Email);
+        await _authService.VerifyEmailAsync(dto.Email, dto.Otp);
+        return Ok(new { message = "Email verified successfully." });
+    }
+
+    [HttpPost("resend-verification")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResendVerification([FromBody] ForgotPasswordDto dto)
+    {
+        _logger.LogInformation("Resend verification requested for {Email}", dto.Email);
+        var otp = await _authService.RequestEmailVerificationOtpAsync(dto.Email);
+        return Ok(new { message = "Verification email sent.", otp = otp }); // Returning OTP directly as requested
+    }
+
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        _logger.LogInformation("Forgot password requested for {Email}", dto.Email);
+        var otp = await _authService.ForgotPasswordAsync(dto.Email);
+        return Ok(new { message = "Password reset OTP sent.", otp = otp }); // Returning OTP directly as requested
+    }
+
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        _logger.LogInformation("Password reset attempt for {Email}", dto.Email);
+        await _authService.ResetPasswordAsync(dto.Email, dto.Otp, dto.NewPassword);
+        return Ok(new { message = "Password reset successfully." });
+    }
+
+    [HttpPost("external-login")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExternalLogin([FromBody] ExternalLoginDto dto)
+    {
+        _logger.LogInformation("External login attempt for provider {Provider}", dto.Provider);
+        var result = await _authService.ExternalLoginAsync(dto.Provider, dto.IdToken);
+        return Ok(result);
+    }
 }

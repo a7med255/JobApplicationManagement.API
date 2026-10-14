@@ -23,5 +23,10 @@ public class RecruiterConfiguration : IEntityTypeConfiguration<Recruiter>
 
         builder.HasIndex(r => r.UserId)
             .IsUnique();
+
+        builder.HasOne(r => r.Company)
+            .WithMany(c => c.Recruiters)
+            .HasForeignKey(r => r.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

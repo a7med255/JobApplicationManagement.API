@@ -1,0 +1,21 @@
+<div class="container company-page">
+  <div class="page-header">
+    <div><a routerLink="/recruiter/dashboard" class="back-link">&larr; Back to dashboard</a><h1 class="page-header__title mt-3">Company profile</h1><p class="page-header__subtitle">This information appears on every job posting.</p></div>
+  </div>
+  @if (isLoading()) { <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading company...</div></div> }
+  @if (message()) { <div class="alert" [class.alert--danger]="isError()" [class.alert--success]="!isError()" role="status">{{ message() }}</div> }
+  <form class="card company-form" [formGroup]="form" (ngSubmit)="save()">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label" for="company-name">Company name *</label><input id="company-name" class="form-control" formControlName="name"></div>
+      <div class="form-group"><label class="form-label" for="industry">Industry</label><input id="industry" class="form-control" formControlName="industry"></div>
+      <div class="form-group"><label class="form-label" for="company-size">Company size</label><input id="company-size" class="form-control" formControlName="companySize" placeholder="e.g. 51–200 employees"></div>
+      <div class="form-group"><label class="form-label" for="website">Website</label><input id="website" class="form-control" type="url" formControlName="website"></div>
+      <div class="form-group"><label class="form-label" for="logo">Logo URL</label><input id="logo" class="form-control" type="url" formControlName="logoUrl"></div>
+      <div class="form-group"><label class="form-label" for="headquarters">Headquarters</label><input id="headquarters" class="form-control" formControlName="headquarters"></div>
+      <div class="form-group"><label class="form-label" for="country">Country</label><input id="country" class="form-control" formControlName="country"></div>
+      <div class="form-group"><label class="form-label" for="city">City</label><input id="city" class="form-control" formControlName="city"></div>
+      <div class="form-group form-group--full"><label class="form-label" for="company-description">About the company</label><textarea id="company-description" class="form-control" rows="7" formControlName="description"></textarea></div>
+    </div>
+    <div class="form-actions"><a routerLink="/recruiter/dashboard" class="btn btn--secondary">Cancel</a><button class="btn btn--primary" type="submit" [disabled]="isSaving()">{{ isSaving() ? 'Saving...' : 'Save company' }}</button></div>
+  </form>
+</div>

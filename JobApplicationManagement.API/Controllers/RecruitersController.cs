@@ -101,6 +101,29 @@ public class RecruitersController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves the authenticated recruiter's profile.
+    /// </summary>
+    /// <remarks>
+    /// Requires authentication. Accessible only by the Recruiter.
+    /// </remarks>
+    /// <returns>The detailed recruiter profile.</returns>
+    /// <response code="200">Recruiter found.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">The authenticated user does not have the Recruiter role.</response>
+    /// <response code="404">Recruiter profile was not found.</response>
+    [HttpGet("mine")]
+    [Authorize(Roles = "Recruiter")]
+    [ProducesResponseType(typeof(RecruiterResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var response = await _recruiterService.GetMyProfileAsync(_currentUserService.UserId!);
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Updates a recruiter's profile.
     /// </summary>
     /// <remarks>

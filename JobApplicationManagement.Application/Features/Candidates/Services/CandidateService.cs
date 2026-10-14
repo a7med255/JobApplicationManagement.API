@@ -98,6 +98,20 @@ public class CandidateService : ICandidateService
         return _mapper.Map<CandidateResponseDto>(candidate);
     }
 
+    public async Task<CandidateResponseDto> GetMyProfileAsync(string userId)
+    {
+        _logger.LogInformation("Getting candidate profile for UserId {UserId}", userId);
+
+        var candidate = await _unitOfWork.Candidates.Query()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (candidate is null)
+            throw new NotFoundException(nameof(Candidate), userId);
+
+        return _mapper.Map<CandidateResponseDto>(candidate);
+    }
+
     public async Task<CandidateResponseDto> UpdateCandidateAsync(int id, UpdateCandidateDto updateDto, string userId, IEnumerable<string> roles)
     {
         _logger.LogInformation("Updating candidate with Id {CandidateId}", id);

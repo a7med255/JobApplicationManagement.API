@@ -97,6 +97,20 @@ public class RecruiterService : IRecruiterService
         return _mapper.Map<RecruiterResponseDto>(recruiter);
     }
 
+    public async Task<RecruiterResponseDto> GetMyProfileAsync(string userId)
+    {
+        _logger.LogInformation("Getting recruiter profile for UserId {UserId}", userId);
+
+        var recruiter = await _unitOfWork.Recruiters.Query()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.UserId == userId);
+
+        if (recruiter is null)
+            throw new NotFoundException(nameof(Recruiter), userId);
+
+        return _mapper.Map<RecruiterResponseDto>(recruiter);
+    }
+
     public async Task<RecruiterResponseDto> UpdateRecruiterAsync(int id, UpdateRecruiterDto updateDto, string userId, IEnumerable<string> roles)
     {
         _logger.LogInformation("Updating recruiter with Id {RecruiterId}", id);

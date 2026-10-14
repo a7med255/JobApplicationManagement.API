@@ -1,0 +1,43 @@
+.back-link {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.mt-3 { margin-top: 1rem; }
+.text-muted { color: var(--text-muted); }
+
+code {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.table-input { min-width: 180px; }
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirmation-text {
+  color: var(--color-danger);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+
+  &__info {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}

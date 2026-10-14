@@ -1,0 +1,117 @@
+<div class="container job-details-container">
+  @if (isLoading()) {
+    <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading job details...</div></div>
+  } @else if (isError() || !job()) {
+    <div class="error-state">
+      <h2 class="error-state__title">Job not found</h2>
+      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
+      <a routerLink="/jobs" class="btn btn--secondary">Back to jobs</a>
+    </div>
+  } @else {
+    <div class="page-header"><a routerLink="/jobs" class="back-link">&larr; Back to jobs</a></div>
+
+    <div class="job-details-layout">
+      <main class="job-main">
+        <section class="card job-header-card">
+          <div class="company-heading">
+            @if (job()!.company.logoUrl) { <img [src]="job()!.company.logoUrl" [alt]="job()!.company.name + ' logo'"> }
+            <div>
+              <h1 class="job-title">{{ job()!.title }}</h1>
+              <p class="company-name">{{ job()!.company.name }}</p>
+            </div>
+          </div>
+          <div class="job-meta">
+            <span class="badge" [class.badge--active]="job()!.isActive" [class.badge--closed]="!job()!.isActive">{{ statusLabels[job()!.status] }}</span>
+            <span>{{ job()!.city }}, {{ job()!.country }}</span>
+            <span>{{ workplaceLabels[job()!.workplaceType] }}</span>
+            <span>{{ employmentLabels[job()!.employmentType] }}</span>
+          </div>
+        </section>
+
+        <section class="card detail-section">
+          <h2>About the role</h2>
+          <p class="preserve-lines">{{ job()!.description }}</p>
+        </section>
+        <section class="card detail-section">
+          <h2>Responsibilities</h2>
+          <p class="preserve-lines">{{ job()!.responsibilities }}</p>
+        </section>
+        <section class="card detail-section">
+          <h2>Requirements</h2>
+          <p class="preserve-lines">{{ job()!.requirements }}</p>
+          @if (job()!.educationRequirements) { <h3>Education</h3><p class="preserve-lines">{{ job()!.educationRequirements }}</p> }
+          @if (job()!.preferredQualifications) { <h3>Preferred qualifications</h3><p class="preserve-lines">{{ job()!.preferredQualifications }}</p> }
+        </section>
+        <section class="card detail-section">
+          <h2>Skills</h2>
+          <div class="skill-list">
+            @for (skill of job()!.requiredSkills; track skill) { <span class="skill skill--required">{{ skill }}</span> }
+            @for (skill of job()!.preferredSkills; track skill) { <span class="skill">{{ skill }}</span> }
+          </div>
+        </section>
+        @if (job()!.benefits) {
+          <section class="card detail-section"><h2>Benefits</h2><p class="preserve-lines">{{ job()!.benefits }}</p></section>
+        }
+        <section class="card detail-section company-section">
+          <h2>About {{ job()!.company.name }}</h2>
+          @if (job()!.company.description) { <p class="preserve-lines">{{ job()!.company.description }}</p> }
+          <div class="company-facts">
+            @if (job()!.company.industry) { <span><strong>Industry:</strong> {{ job()!.company.industry }}</span> }
+            @if (job()!.company.companySize) { <span><strong>Size:</strong> {{ job()!.company.companySize }}</span> }
+            @if (job()!.company.headquarters) { <span><strong>Headquarters:</strong> {{ job()!.company.headquarters }}</span> }
+          </div>
+          @if (job()!.company.website) { <a [href]="job()!.company.website" target="_blank" rel="noopener noreferrer">Company website</a> }
+        </section>
+      </main>
+
+      <aside class="job-sidebar">
+        <section class="card action-card">
+          <h2 class="action-card__title">Apply for this role</h2>
+          @if (!job()!.isActive) {
+            <div class="alert alert--warning">This position is not accepting applications.</div>
+          } @else if (authService.isCandidate()) {
+            @if (applySuccess()) {
+              <div class="alert alert--success"><strong>Application submitted</strong><p>Your selected CV is attached to this application.</p></div>
+              <a routerLink="/candidate/applications" class="btn btn--secondary btn--block">View application</a>
+            } @else {
+              @if (applyError()) { <div class="alert alert--danger" role="alert">{{ applyError() }}</div> }
+              @if (isLoadingCvs()) {
+                <p>Loading your CVs...</p>
+              } @else if (cvs().length === 0) {
+                <div class="alert alert--warning">Upload a CV before applying.</div>
+                <a routerLink="/candidate/cvs" class="btn btn--primary btn--block">Manage CVs</a>
+              } @else {
+                <label class="form-label" for="application-cv">CV to submit</label>
+                <select id="application-cv" class="form-control mb-3" [value]="selectedCvId() ?? ''" (change)="selectCv($event)">
+                  @for (cv of cvs(); track cv.id) { <option [value]="cv.id">{{ cv.displayName }}{{ cv.isDefault ? ' (default)' : '' }}</option> }
+                </select>
+                <button class="btn btn--primary btn--block btn--lg mb-3" type="button" (click)="onApply()" [disabled]="isApplying() || !selectedCvId()">
+                  {{ isApplying() ? 'Submitting...' : 'Apply now' }}
+                </button>
+              }
+              @if (saveError()) { <div class="alert alert--danger" role="alert">{{ saveError() }}</div> }
+              <button class="btn btn--secondary btn--block" type="button" (click)="toggleSave()" [disabled]="isSaving()">
+                {{ isSaving() ? 'Updating...' : (isSaved() ? 'Remove from saved jobs' : 'Save for later') }}
+              </button>
+            }
+          } @else if (!authService.isAuthenticated()) {
+            <a routerLink="/login" class="btn btn--primary btn--block">Sign in to apply</a>
+          } @else {
+            <div class="alert alert--info">Candidate actions are disabled for this account.</div>
+          }
+        </section>
+
+        <section class="card job-facts">
+          <h2>Job information</h2>
+          <dl>
+            <div><dt>Experience</dt><dd>{{ experienceLabels[job()!.experienceLevel] }} · {{ job()!.minimumYearsExperience }}{{ job()!.maximumYearsExperience !== null ? '–' + job()!.maximumYearsExperience : '+' }} years</dd></div>
+            <div><dt>Vacancies</dt><dd>{{ job()!.numberOfVacancies }}</dd></div>
+            <div><dt>Posted</dt><dd>{{ job()!.postedAt ? (job()!.postedAt | date:'mediumDate') : 'Not published' }}</dd></div>
+            <div><dt>Deadline</dt><dd>{{ job()!.applicationDeadline ? (job()!.applicationDeadline | date:'mediumDate') : 'Open until filled' }}</dd></div>
+            <div><dt>Salary</dt><dd>@if (job()!.isSalaryVisible) { {{ job()!.minimumSalary ?? '—' }} – {{ job()!.maximumSalary ?? '—' }} {{ job()!.currency }} / {{ job()!.salaryPeriod !== null ? salaryPeriodLabels[job()!.salaryPeriod!] : '' }} } @else { Not disclosed }</dd></div>
+          </dl>
+        </section>
+      </aside>
+    </div>
+  }
+</div>

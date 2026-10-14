@@ -10,4 +10,5 @@ public class AuthResponseDto
     public DateTime AccessTokenExpiration { get; set; }
     public string Email { get; set; } = string.Empty;
     public IEnumerable<string> Roles { get; set; } = Enumerable.Empty<string>();
+    public string? Otp { get; set; }
 }

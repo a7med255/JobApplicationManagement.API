@@ -1,0 +1,79 @@
+<div class="container">
+  <div class="page-header">
+    <a routerLink="/candidate/dashboard" class="back-link">← Back to Dashboard</a>
+    <h1 class="page-header__title mt-3">My Applications</h1>
+    <p class="page-header__subtitle">{{ totalCount() }} total</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading your applications...</div>
+    </div>
+  } @else if (isError()) {
+    <div class="error-state">
+      <div class="error-state__icon">⚠️</div>
+      <h3 class="error-state__title">Failed to load applications</h3>
+      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
+      <button class="btn btn--secondary" (click)="loadApplications()">Retry</button>
+    </div>
+  } @else if (applications().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">📋</div>
+      <h3 class="empty-state__title">No applications yet</h3>
+      <p class="empty-state__message">You haven't applied to any jobs yet.</p>
+      <a routerLink="/jobs" class="btn btn--primary">Find a Job</a>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Applied On</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (app of applications(); track app.id) {
+            <tr>
+              <td>
+                <strong>Job #{{ app.jobId }}</strong>
+              </td>
+              <td>{{ app.appliedAt | date:'mediumDate' }}</td>
+              <td>
+                <app-application-status-badge [status]="app.jobApplicationStatus" />
+              </td>
+              <td>
+                <a [routerLink]="['/candidate/applications', app.id]" class="btn btn--secondary btn--sm">
+                  View Details
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button 
+          class="btn btn--secondary btn--sm" 
+          [disabled]="pageNumber() === 1"
+          aria-label="Go to previous applications page"
+          (click)="prevPage()">
+          Previous
+        </button>
+        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button 
+          class="btn btn--secondary btn--sm" 
+          [disabled]="pageNumber() === totalPages()"
+          aria-label="Go to next applications page"
+          (click)="nextPage()">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>

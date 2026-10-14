@@ -1,0 +1,99 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
+      <h1 class="page-header__title mt-3">Manage All Jobs</h1>
+      <p class="page-header__subtitle">{{ totalCount() }} job{{ totalCount() === 1 ? '' : 's' }}</p>
+    </div>
+  </div>
+
+  @if (actionError()) {
+    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading jobs...</div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-state">
+      <h2 class="error-state__title">{{ errorMessage() }}</h2>
+      <button class="btn btn--secondary" type="button" (click)="loadJobs()">Retry</button>
+    </div>
+  } @else if (jobs().length === 0) {
+    <div class="empty-state">
+      <h2 class="empty-state__title">No jobs found</h2>
+      <p class="empty-state__message">There are no job postings in the system.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Job ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (job of jobs(); track job.id) {
+            <tr>
+              <td>#{{ job.id }}</td>
+              <td><strong>{{ job.title }}</strong></td>
+              <td>
+                <span class="badge" [class.badge--active]="job.isActive" [class.badge--closed]="!job.isActive">
+                  {{ job.isActive ? 'Active' : 'Closed' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a [routerLink]="['/jobs', job.id]" class="btn btn--secondary btn--sm">View</a>
+                  <a [routerLink]="['/admin/jobs', job.id, 'edit']" class="btn btn--secondary btn--sm">Edit</a>
+                  @if (job.status === JobStatus.Published || job.status === JobStatus.Draft || job.status === JobStatus.Closed || job.status === JobStatus.Expired) {
+                  <button
+                    class="btn btn--secondary btn--sm"
+                    type="button"
+                    [disabled]="pendingId() === job.id"
+                    (click)="setJobActive(job, !job.isActive)"
+                  >
+                    {{ pendingId() === job.id ? 'Updating...' : (job.isActive ? 'Close' : (job.status === JobStatus.Draft ? 'Publish' : 'Reopen')) }}
+                  </button>
+                  }
+
+                  @if (job.status === JobStatus.Draft && confirmDeleteId() === job.id) {
+                    <span class="confirmation-text">Delete permanently?</span>
+                    <button
+                      class="btn btn--danger btn--sm"
+                      type="button"
+                      [disabled]="pendingId() === job.id"
+                      (click)="deleteJob(job.id)"
+                    >
+                      {{ pendingId() === job.id ? 'Deleting...' : 'Confirm' }}
+                    </button>
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
+                  } @else if (job.status === JobStatus.Draft) {
+                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(job.id)">Delete</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="pagination" aria-label="Job pages">
+        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="prevPage()">
+          Previous
+        </button>
+        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
+          Next
+        </button>
+      </nav>
+    }
+  }
+</div>

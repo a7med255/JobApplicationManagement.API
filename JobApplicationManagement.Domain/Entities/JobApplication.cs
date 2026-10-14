@@ -18,6 +18,14 @@ public class JobApplication
 
     public Job Job { get; set; } = null!;
 
+    /// <summary>
+    /// Exact immutable CV version submitted with this application.
+    /// Null is retained only for applications created before CV versioning existed.
+    /// </summary>
+    public int? SubmittedCvId { get; set; }
+
+    public CandidateCv? SubmittedCv { get; set; }
+
     public JobApplicationStatus JobApplicationStatus { get; set; }
 
     public DateTime AppliedAt { get; set; }

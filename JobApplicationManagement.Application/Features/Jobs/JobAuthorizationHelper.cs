@@ -13,7 +13,8 @@ public static class JobAuthorizationHelper
         IUnitOfWork unitOfWork,
         Job job,
         ICurrentUserService currentUserService,
-        string operation)
+        string operation,
+        CancellationToken cancellationToken = default)
     {
         var roles = currentUserService.Roles.ToList();
         if (roles.Contains(AdminRole))
@@ -22,7 +23,7 @@ public static class JobAuthorizationHelper
         var userId = currentUserService.UserId;
         var recruiter = await unitOfWork.Recruiters.Query()
             .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.UserId == userId);
+            .FirstOrDefaultAsync(r => r.UserId == userId, cancellationToken);
 
         if (recruiter is null || job.RecruiterId != recruiter.Id)
         {

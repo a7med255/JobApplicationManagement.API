@@ -1,0 +1,68 @@
+<div class="container form-container">
+  <div class="page-header"><a [routerLink]="backRoute()" class="back-link">&larr; {{ backLabel() }}</a><h1 class="page-header__title mt-3">{{ isEditMode ? 'Edit job posting' : 'Create job posting' }}</h1></div>
+  @if (isLoading()) { <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading job...</div></div> }
+  @if (isError() && errorMsg()) { <div class="alert alert--danger" role="alert">{{ errorMsg() }}</div> }
+
+  @if (!isLoading()) {
+    <form class="job-form" [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+      <section class="card form-section">
+        <h2>Role overview</h2>
+        <div class="form-grid">
+          <div class="form-group form-group--wide"><label class="form-label" for="title">Job title *</label><input id="title" class="form-control" formControlName="title" [class.is-invalid]="isInvalid('title')"></div>
+          <div class="form-group"><label class="form-label" for="department">Department *</label><input id="department" class="form-control" formControlName="department"></div>
+          <div class="form-group"><label class="form-label" for="category">Category *</label><input id="category" class="form-control" formControlName="category"></div>
+          <div class="form-group form-group--full"><label class="form-label" for="description">About the role *</label><textarea id="description" class="form-control" rows="7" formControlName="description" [class.is-invalid]="isInvalid('description')"></textarea></div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2>Location and working arrangement</h2>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label" for="country">Country *</label><input id="country" class="form-control" formControlName="country"></div>
+          <div class="form-group"><label class="form-label" for="city">City *</label><input id="city" class="form-control" formControlName="city"></div>
+          <div class="form-group"><label class="form-label" for="location">Location details</label><input id="location" class="form-control" formControlName="location"></div>
+          <div class="form-group"><label class="form-label" for="workplace">Workplace *</label><select id="workplace" class="form-control" formControlName="workplaceType">@for (option of workplaceOptions; track option[0]) { <option [ngValue]="option[0]">{{ option[1] }}</option> }</select></div>
+          <div class="form-group"><label class="form-label" for="employment">Employment type *</label><select id="employment" class="form-control" formControlName="employmentType">@for (option of employmentOptions; track option[0]) { <option [ngValue]="option[0]">{{ option[1] }}</option> }</select></div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2>Experience and qualifications</h2>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label" for="level">Experience level *</label><select id="level" class="form-control" formControlName="experienceLevel">@for (option of experienceOptions; track option[0]) { <option [ngValue]="option[0]">{{ option[1] }}</option> }</select></div>
+          <div class="form-group"><label class="form-label" for="min-years">Minimum years *</label><input id="min-years" class="form-control" type="number" min="0" formControlName="minimumYearsExperience"></div>
+          <div class="form-group"><label class="form-label" for="max-years">Maximum years</label><input id="max-years" class="form-control" type="number" min="0" formControlName="maximumYearsExperience"></div>
+          <div class="form-group form-group--full"><label class="form-label" for="required-skills">Required skills</label><input id="required-skills" class="form-control" formControlName="requiredSkills" placeholder="Angular, TypeScript, RxJS"><small>Separate skills with commas.</small></div>
+          <div class="form-group form-group--full"><label class="form-label" for="preferred-skills">Preferred skills</label><input id="preferred-skills" class="form-control" formControlName="preferredSkills" placeholder="Accessibility, CI/CD"></div>
+          <div class="form-group form-group--full"><label class="form-label" for="education">Education requirements</label><textarea id="education" class="form-control" rows="3" formControlName="educationRequirements"></textarea></div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2>Role details</h2>
+        <div class="form-grid">
+          <div class="form-group form-group--full"><label class="form-label" for="responsibilities">Responsibilities *</label><textarea id="responsibilities" class="form-control" rows="6" formControlName="responsibilities"></textarea></div>
+          <div class="form-group form-group--full"><label class="form-label" for="requirements">Requirements *</label><textarea id="requirements" class="form-control" rows="6" formControlName="requirements"></textarea></div>
+          <div class="form-group form-group--full"><label class="form-label" for="preferred">Preferred qualifications</label><textarea id="preferred" class="form-control" rows="4" formControlName="preferredQualifications"></textarea></div>
+          <div class="form-group form-group--full"><label class="form-label" for="benefits">Benefits</label><textarea id="benefits" class="form-control" rows="4" formControlName="benefits"></textarea></div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2>Salary and application settings</h2>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label" for="min-salary">Minimum salary</label><input id="min-salary" class="form-control" type="number" min="0" formControlName="minimumSalary"></div>
+          <div class="form-group"><label class="form-label" for="max-salary">Maximum salary</label><input id="max-salary" class="form-control" type="number" min="0" formControlName="maximumSalary"></div>
+          <div class="form-group"><label class="form-label" for="currency">Currency</label><input id="currency" class="form-control" maxlength="3" formControlName="currency" placeholder="EGP"></div>
+          <div class="form-group"><label class="form-label" for="salary-period">Salary period</label><select id="salary-period" class="form-control" formControlName="salaryPeriod"><option [ngValue]="null">Select</option>@for (option of salaryPeriodOptions; track option[0]) { <option [ngValue]="option[0]">{{ option[1] }}</option> }</select></div>
+          <div class="form-group"><label class="form-label" for="vacancies">Vacancies *</label><input id="vacancies" class="form-control" type="number" min="1" formControlName="numberOfVacancies"></div>
+          <div class="form-group"><label class="form-label" for="deadline">Application deadline</label><input id="deadline" class="form-control" type="date" formControlName="applicationDeadline"></div>
+          <label class="check-row"><input type="checkbox" formControlName="isSalaryVisible"> Show salary to candidates</label>
+          @if (!isEditMode) { <label class="check-row"><input type="checkbox" formControlName="publishImmediately"> Publish immediately (clear to save as draft)</label> }
+        </div>
+      </section>
+
+      <div class="form-actions"><a [routerLink]="backRoute()" class="btn btn--secondary">Cancel</a><button type="submit" class="btn btn--primary" [disabled]="jobForm.invalid || isSubmitting()">{{ isSubmitting() ? 'Saving...' : (isEditMode ? 'Update job' : 'Save job') }}</button></div>
+    </form>
+  }
+</div>

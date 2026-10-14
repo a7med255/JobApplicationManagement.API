@@ -1,0 +1,100 @@
+<div class="auth-container">
+  <div class="card auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Join {{ appConfig.name }} today</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert--danger" role="alert" aria-live="polite">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-group">
+        <label for="fullName" class="form-label">Full Name</label>
+        <input
+          id="fullName"
+          type="text"
+          autocomplete="name"
+          formControlName="fullName"
+          class="form-control"
+          placeholder="John Doe"
+          [class.ng-invalid]="isFieldInvalid('fullName')"
+        />
+        @if (isFieldInvalid('fullName')) {
+          <div class="form-error">Full Name is required (max 200 chars).</div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email address</label>
+        <input
+          id="email"
+          type="email"
+          autocomplete="email"
+          formControlName="email"
+          class="form-control"
+          placeholder="you@example.com"
+          [class.ng-invalid]="isFieldInvalid('email')"
+        />
+        @if (isFieldInvalid('email')) {
+          <div class="form-error">Please enter a valid email address.</div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="new-password"
+          formControlName="password"
+          class="form-control"
+          placeholder="••••••••"
+          [class.ng-invalid]="isFieldInvalid('password')"
+        />
+        @if (isFieldInvalid('password')) {
+          <div class="form-error">{{ passwordErrorMessage() }}</div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="role" class="form-label">I am a...</label>
+        <select
+          id="role"
+          formControlName="role"
+          class="form-control"
+          [class.ng-invalid]="isFieldInvalid('role')"
+        >
+          <option value="Candidate">Candidate (Looking for jobs)</option>
+          <option value="Recruiter">Recruiter (Hiring talent)</option>
+        </select>
+        @if (isFieldInvalid('role')) {
+          <div class="form-error">Please select a role.</div>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn--primary btn--block btn--lg auth-submit"
+        [disabled]="isLoading()"
+        [attr.aria-busy]="isLoading()"
+      >
+        @if (isLoading()) {
+          <span class="spinner"></span> Creating account...
+        } @else {
+          Create Account
+        }
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p class="auth-footer-text">
+        Already have an account?
+        <a routerLink="/login" class="auth-link">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>

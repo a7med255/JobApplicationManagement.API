@@ -1,0 +1,122 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Explore Jobs</h1>
+      <p class="page-header__subtitle">
+        Browse {{ totalCount() }} job {{ totalCount() === 1 ? 'posting' : 'postings' }}.
+      </p>
+    </div>
+  </div>
+
+  <form class="card search-panel" [formGroup]="searchForm" (ngSubmit)="search()">
+    <div class="search-panel__grid">
+      <div class="form-group">
+        <label class="form-label" for="job-search">Keyword</label>
+        <input id="job-search" class="form-control" formControlName="search" placeholder="Title, company or skill">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="job-city">City</label>
+        <input id="job-city" class="form-control" formControlName="city" placeholder="e.g. Cairo">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="job-skill">Skill</label>
+        <input id="job-skill" class="form-control" formControlName="skill" placeholder="e.g. Angular">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="workplace">Workplace</label>
+        <select id="workplace" class="form-control" formControlName="workplaceType">
+          <option [ngValue]="null">Any</option>
+          <option [ngValue]="WorkplaceType.OnSite">On-site</option>
+          <option [ngValue]="WorkplaceType.Remote">Remote</option>
+          <option [ngValue]="WorkplaceType.Hybrid">Hybrid</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="employment">Employment</label>
+        <select id="employment" class="form-control" formControlName="employmentType">
+          <option [ngValue]="null">Any</option>
+          <option [ngValue]="EmploymentType.FullTime">Full-time</option>
+          <option [ngValue]="EmploymentType.PartTime">Part-time</option>
+          <option [ngValue]="EmploymentType.Contract">Contract</option>
+          <option [ngValue]="EmploymentType.Internship">Internship</option>
+          <option [ngValue]="EmploymentType.Freelance">Freelance</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="experience">Experience</label>
+        <select id="experience" class="form-control" formControlName="experienceLevel">
+          <option [ngValue]="null">Any</option>
+          <option [ngValue]="ExperienceLevel.EntryLevel">Entry level</option>
+          <option [ngValue]="ExperienceLevel.Junior">Junior</option>
+          <option [ngValue]="ExperienceLevel.MidLevel">Mid level</option>
+          <option [ngValue]="ExperienceLevel.Senior">Senior</option>
+          <option [ngValue]="ExperienceLevel.Lead">Lead</option>
+          <option [ngValue]="ExperienceLevel.Manager">Manager</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="sort">Sort</label>
+        <select id="sort" class="form-control" formControlName="sort">
+          <option [ngValue]="JobSortOrder.Newest">Newest</option>
+          <option [ngValue]="JobSortOrder.Oldest">Oldest</option>
+          <option [ngValue]="JobSortOrder.SalaryLowToHigh">Salary: low to high</option>
+          <option [ngValue]="JobSortOrder.SalaryHighToLow">Salary: high to low</option>
+        </select>
+      </div>
+    </div>
+    <div class="search-panel__actions">
+      <button class="btn btn--primary" type="submit">Search jobs</button>
+      <button class="btn btn--secondary" type="button" (click)="clearFilters()">Clear</button>
+    </div>
+  </form>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading jobs...</div>
+    </div>
+  } @else if (isError()) {
+    <div class="error-state">
+      <div class="error-state__icon">⚠️</div>
+      <h3 class="error-state__title">Failed to load jobs</h3>
+      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
+      <button class="btn btn--secondary" (click)="loadJobs()">Retry</button>
+    </div>
+  } @else if (jobs().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">🔍</div>
+      <h3 class="empty-state__title">No jobs found</h3>
+      <p class="empty-state__message">There are currently no job postings to display.</p>
+    </div>
+  } @else {
+    <div class="job-grid">
+      @for (job of jobs(); track job.id) {
+        <app-job-card 
+          [job]="job" 
+          [showApply]="authService.isCandidate()"
+          (apply)="onApply($event)">
+        </app-job-card>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button 
+          class="btn btn--secondary btn--sm" 
+          [disabled]="pageNumber() === 1"
+          aria-label="Go to previous jobs page"
+          (click)="prevPage()">
+          Previous
+        </button>
+        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button 
+          class="btn btn--secondary btn--sm" 
+          [disabled]="pageNumber() === totalPages()"
+          aria-label="Go to next jobs page"
+          (click)="nextPage()">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>

@@ -18,6 +18,10 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<Candidate>? _candidates;
     private IGenericRepository<Recruiter>? _recruiters;
     private IGenericRepository<SavedJob>? _savedJobs;
+    private IGenericRepository<Company>? _companies;
+    private IGenericRepository<Skill>? _skills;
+    private IGenericRepository<JobSkill>? _jobSkills;
+    private IGenericRepository<CandidateCv>? _candidateCvs;
 
     public INotificationService NotificationService { get; }
 
@@ -46,6 +50,18 @@ public class UnitOfWork : IUnitOfWork
     /// <inheritdoc/>
     public IGenericRepository<SavedJob> SavedJobs
         => _savedJobs ??= new GenericRepository<SavedJob>(_context);
+
+    public IGenericRepository<Company> Companies
+        => _companies ??= new GenericRepository<Company>(_context);
+
+    public IGenericRepository<Skill> Skills
+        => _skills ??= new GenericRepository<Skill>(_context);
+
+    public IGenericRepository<JobSkill> JobSkills
+        => _jobSkills ??= new GenericRepository<JobSkill>(_context);
+
+    public IGenericRepository<CandidateCv> CandidateCvs
+        => _candidateCvs ??= new GenericRepository<CandidateCv>(_context);
 
     /// <inheritdoc/>
     public async Task<int> SaveChangesAsync()

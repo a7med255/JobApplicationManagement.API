@@ -8,6 +8,7 @@ public interface ICandidateService
     Task<CandidateResponseDto> CreateCandidateAsync(CreateCandidateDto createDto);
     Task<PaginatedResult<CandidateResponseDto>> GetAllCandidatesAsync(int pageNumber, int pageSize);
     Task<CandidateResponseDto> GetCandidateByIdAsync(int id, string userId, IEnumerable<string> roles);
+    Task<CandidateResponseDto> GetMyProfileAsync(string userId);
     Task<CandidateResponseDto> UpdateCandidateAsync(int id, UpdateCandidateDto updateDto, string userId, IEnumerable<string> roles);
     Task DeleteCandidateAsync(int id, string userId, IEnumerable<string> roles);
 }

@@ -45,7 +45,12 @@ public class GetJobApplicationsQueryHandler : IRequestHandler<GetJobApplications
             {
                 Id = a.Id,
                 CandidateId = a.CandidateId,
+                CandidateName = a.Candidate.Name,
                 JobId = a.JobId,
+                JobTitle = a.Job.Title,
+                SubmittedCvId = a.SubmittedCvId,
+                SubmittedCvDisplayName = a.SubmittedCv == null ? null : a.SubmittedCv.DisplayName,
+                SubmittedCvFileName = a.SubmittedCv == null ? null : a.SubmittedCv.OriginalFileName,
                 JobApplicationStatus = a.JobApplicationStatus,
                 AppliedAt = a.AppliedAt,
                 StatusUpdatedAt = a.StatusUpdatedAt,

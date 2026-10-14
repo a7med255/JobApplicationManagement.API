@@ -2,6 +2,7 @@ using JobApplicationManagement.Application.Common.Exceptions;
 using JobApplicationManagement.Application.Common.Interfaces;
 using JobApplicationManagement.Application.Features.SavedJobs.DTOs;
 using JobApplicationManagement.Domain.Entities;
+using JobApplicationManagement.Application.Features.Jobs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,8 @@ public class SaveJobCommandHandler : IRequestHandler<SaveJobCommand, SavedJobRes
 
         if (job is null)
             throw new NotFoundException(nameof(Job), request.JobId);
+        if (!JobLifecycle.CanAcceptApplications(job, DateTime.UtcNow))
+            throw new ConflictException("Only published jobs that are still open can be saved.");
 
         var alreadySaved = await _unitOfWork.SavedJobs.Query()
             .AsNoTracking()

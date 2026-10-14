@@ -1,0 +1,70 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Administrator Dashboard</h1>
+      <p class="page-header__subtitle">System-wide jobs, profiles, and applications.</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading dashboard...</div>
+    </div>
+  } @else {
+    @if (hasPartialError()) {
+      <div class="alert alert--warning" role="alert">
+        Some dashboard totals could not be loaded. The available values are shown below.
+      </div>
+    }
+
+    <div class="stats-grid">
+      <a class="stat-card stat-card--hoverable" routerLink="/admin/jobs">
+        <h3 class="stat-card__label">Jobs</h3>
+        <div class="stat-card__value">{{ totalJobs() }}</div>
+      </a>
+      <a class="stat-card stat-card--hoverable" routerLink="/admin/applications">
+        <h3 class="stat-card__label">Applications</h3>
+        <div class="stat-card__value">{{ totalApplications() }}</div>
+      </a>
+      <a class="stat-card stat-card--hoverable" routerLink="/admin/candidates">
+        <h3 class="stat-card__label">Candidate Profiles</h3>
+        <div class="stat-card__value">{{ totalCandidates() }}</div>
+      </a>
+      <a class="stat-card stat-card--hoverable" routerLink="/admin/recruiters">
+        <h3 class="stat-card__label">Recruiter Profiles</h3>
+        <div class="stat-card__value">{{ totalRecruiters() }}</div>
+      </a>
+    </div>
+
+    <div class="dashboard-actions">
+      <div class="card dashboard-action-card">
+        <div class="action-icon" aria-hidden="true">&#128188;</div>
+        <h3>Manage Jobs</h3>
+        <p>View, edit, close, reopen, or delete job postings.</p>
+        <a routerLink="/admin/jobs" class="btn btn--secondary mt-auto">Manage Jobs</a>
+      </div>
+
+      <div class="card dashboard-action-card">
+        <div class="action-icon" aria-hidden="true">&#128203;</div>
+        <h3>Manage Applications</h3>
+        <p>Review statuses or delete applications across the system.</p>
+        <a routerLink="/admin/applications" class="btn btn--secondary mt-auto">Manage Applications</a>
+      </div>
+
+      <div class="card dashboard-action-card">
+        <div class="action-icon" aria-hidden="true">&#128100;</div>
+        <h3>Candidate Profiles</h3>
+        <p>Review, edit, or delete candidate profile records.</p>
+        <a routerLink="/admin/candidates" class="btn btn--secondary mt-auto">Manage Candidates</a>
+      </div>
+
+      <div class="card dashboard-action-card">
+        <div class="action-icon" aria-hidden="true">&#128101;</div>
+        <h3>Recruiter Profiles</h3>
+        <p>Review, edit, or delete recruiter profile records.</p>
+        <a routerLink="/admin/recruiters" class="btn btn--secondary mt-auto">Manage Recruiters</a>
+      </div>
+    </div>
+  }
+</div>

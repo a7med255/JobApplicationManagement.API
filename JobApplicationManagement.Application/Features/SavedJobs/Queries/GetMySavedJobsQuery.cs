@@ -3,6 +3,7 @@ using JobApplicationManagement.Application.Common.Models;
 using JobApplicationManagement.Application.Features.SavedJobs.DTOs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using JobApplicationManagement.Domain.Enums;
 
 namespace JobApplicationManagement.Application.Features.SavedJobs.Queries;
 
@@ -56,7 +57,8 @@ public class GetMySavedJobsQueryHandler : IRequestHandler<GetMySavedJobsQuery, P
                 JobId = sj.JobId,
                 JobTitle = sj.Job.Title,
                 JobDescription = sj.Job.Description,
-                IsActive = sj.Job.IsActive,
+                IsActive = sj.Job.Status == JobStatus.Published &&
+                           (!sj.Job.ApplicationDeadline.HasValue || sj.Job.ApplicationDeadline > DateTime.UtcNow),
                 SavedAt = sj.CreatedAt
             })
             .ToListAsync(cancellationToken);

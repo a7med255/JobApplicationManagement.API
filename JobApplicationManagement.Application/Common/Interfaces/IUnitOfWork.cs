@@ -20,6 +20,14 @@ public interface IUnitOfWork : IDisposable
 
     IGenericRepository<SavedJob> SavedJobs { get; }
 
+    IGenericRepository<Company> Companies { get; }
+
+    IGenericRepository<Skill> Skills { get; }
+
+    IGenericRepository<JobSkill> JobSkills { get; }
+
+    IGenericRepository<CandidateCv> CandidateCvs { get; }
+
     INotificationService NotificationService { get; }
 
     /// <summary>

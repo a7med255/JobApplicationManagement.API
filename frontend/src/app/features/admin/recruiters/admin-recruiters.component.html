@@ -1,0 +1,106 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
+      <h1 class="page-header__title mt-3">Recruiter Profiles</h1>
+      <p class="page-header__subtitle">{{ totalCount() }} profile{{ totalCount() === 1 ? '' : 's' }}</p>
+    </div>
+  </div>
+
+  @if (actionError()) {
+    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Loading recruiter profiles...</div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-state">
+      <h2 class="error-state__title">{{ errorMessage() }}</h2>
+      <button class="btn btn--secondary" type="button" (click)="loadRecruiters()">Retry</button>
+    </div>
+  } @else if (recruiters().length === 0) {
+    <div class="empty-state">
+      <h2 class="empty-state__title">No recruiter profiles found</h2>
+      <p class="empty-state__message">Recruiter profiles are created during recruiter registration.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Profile ID</th>
+            <th>Name</th>
+            <th>Identity user ID</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (recruiter of recruiters(); track recruiter.id) {
+            <tr>
+              <td>#{{ recruiter.id }}</td>
+              <td>
+                @if (editingId() === recruiter.id) {
+                  <input
+                    class="form-control table-input"
+                    [formControl]="editForm.controls.name"
+                    aria-label="Recruiter name"
+                  />
+                  @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+                    <div class="form-error">A name of at most 200 characters is required.</div>
+                  }
+                } @else {
+                  <strong>{{ recruiter.name }}</strong>
+                }
+              </td>
+              <td><code>{{ recruiter.userId }}</code></td>
+              <td>
+                <div class="action-buttons">
+                  @if (editingId() === recruiter.id) {
+                    <button
+                      class="btn btn--primary btn--sm"
+                      type="button"
+                      [disabled]="pendingId() === recruiter.id"
+                      (click)="saveRecruiter(recruiter.id)"
+                    >
+                      {{ pendingId() === recruiter.id ? 'Saving...' : 'Save' }}
+                    </button>
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="cancelEdit()">Cancel</button>
+                  } @else if (confirmDeleteId() === recruiter.id) {
+                    <span class="confirmation-text">Delete this profile?</span>
+                    <button
+                      class="btn btn--danger btn--sm"
+                      type="button"
+                      [disabled]="pendingId() === recruiter.id"
+                      (click)="deleteRecruiter(recruiter.id)"
+                    >
+                      {{ pendingId() === recruiter.id ? 'Deleting...' : 'Confirm' }}
+                    </button>
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
+                  } @else {
+                    <button class="btn btn--secondary btn--sm" type="button" (click)="startEdit(recruiter)">Edit</button>
+                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(recruiter.id)">Delete</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="pagination" aria-label="Recruiter profile pages">
+        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="previousPage()">
+          Previous
+        </button>
+        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
+        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
+          Next
+        </button>
+      </nav>
+    }
+  }
+</div>

@@ -128,7 +128,18 @@ public class ApplicationsController : ControllerBase
         return Ok(response);
     }
 
-    /// <summary>
+    /// <summary>Downloads the immutable CV submitted with this application.</summary>
+    [HttpGet("{id:int}/submitted-cv")]
+    [Authorize(Roles = "Admin,Recruiter,Candidate")]
+    public async Task<IActionResult> DownloadSubmittedCv(
+        [FromRoute] int id,
+        CancellationToken cancellationToken)
+    {
+        var file = await _mediator.Send(new DownloadSubmittedCvQuery(id), cancellationToken);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    /// <summary>   
     /// Updates the status of a job application.
     /// </summary>
     /// <remarks>

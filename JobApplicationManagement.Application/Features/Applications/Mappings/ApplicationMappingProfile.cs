@@ -8,16 +8,10 @@ public class ApplicationMappingProfile : Profile
 {
     public ApplicationMappingProfile()
     {
-        CreateMap<CreateJobApplicationDto, JobApplication>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.CandidateId, opt => opt.Ignore())
-            .ForMember(dest => dest.JobApplicationStatus, opt => opt.Ignore())
-            .ForMember(dest => dest.AppliedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.StatusUpdatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.CancelledAt, opt => opt.Ignore())
-            .ForMember(dest => dest.Candidate, opt => opt.Ignore())
-            .ForMember(dest => dest.Job, opt => opt.Ignore());
-
-        CreateMap<JobApplication, JobApplicationResponseDto>();
+        CreateMap<JobApplication, JobApplicationResponseDto>()
+            .ForMember(destination => destination.CandidateName, option => option.MapFrom(source => source.Candidate == null ? null : source.Candidate.Name))
+            .ForMember(destination => destination.JobTitle, option => option.MapFrom(source => source.Job == null ? null : source.Job.Title))
+            .ForMember(destination => destination.SubmittedCvDisplayName, option => option.MapFrom(source => source.SubmittedCv == null ? null : source.SubmittedCv.DisplayName))
+            .ForMember(destination => destination.SubmittedCvFileName, option => option.MapFrom(source => source.SubmittedCv == null ? null : source.SubmittedCv.OriginalFileName));
     }
 }
