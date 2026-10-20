@@ -26,7 +26,10 @@ export interface AuthResponse {
   accessTokenExpiration?: string;
   email: string;
   roles: AppRole[];
-  otp?: string;
+}
+
+export interface MessageResponse {
+  message: string;
 }
 
 export interface VerifyEmailRequest {

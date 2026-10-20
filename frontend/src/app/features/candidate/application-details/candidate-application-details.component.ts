@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { JobApplicationResponse, JobApplicationStatus } from '../../../core/models/application.models';
-import { ApplicationsService } from '../../../core/services/applications.service';
 import { finalize } from 'rxjs';
+import { JOB_APPLICATION_STATUS_LABELS, JobApplicationResponse, JobApplicationStatus } from '../../../core/models/application.models';
+import { ApplicationsService } from '../../../core/services/applications.service';
 import { ApiErrorService } from '../../../core/services/api-error.service';
-import { ApplicationStatusBadgeComponent } from '../../../shared/components/application-status-badge/application-status-badge.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { CompanyLogoComponent } from '../../../shared/components/company-logo/company-logo.component';
 
 @Component({
   selector: 'app-candidate-application-details',
   standalone: true,
-  imports: [DatePipe, RouterLink, ApplicationStatusBadgeComponent],
+  imports: [DatePipe, RouterLink, StatusBadgeComponent, CompanyLogoComponent],
   templateUrl: './candidate-application-details.component.html',
   styleUrl: './candidate-application-details.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +34,7 @@ export class CandidateApplicationDetailsComponent implements OnInit {
 
   // Expose enum to template
   protected readonly AppStatus = JobApplicationStatus;
+  protected readonly statusLabels = JOB_APPLICATION_STATUS_LABELS;
 
   ngOnInit(): void {
     this.loadApplication();

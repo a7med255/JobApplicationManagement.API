@@ -83,6 +83,10 @@ describe('AuthService', () => {
 
     service.logout();
 
+    const request = httpTesting.expectOne('/api/Auth/logout');
+    expect(request.request.body).toEqual({ refreshToken: 'refresh-token' });
+    request.flush(null);
+
     expect(service.isAuthenticated()).toBe(false);
     expect(service.getAccessToken()).toBeNull();
     expect(sessionStorage.length).toBe(0);

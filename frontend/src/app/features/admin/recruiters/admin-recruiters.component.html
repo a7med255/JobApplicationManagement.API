@@ -1,106 +1,152 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
-      <h1 class="page-header__title mt-3">Recruiter Profiles</h1>
-      <p class="page-header__subtitle">{{ totalCount() }} profile{{ totalCount() === 1 ? '' : 's' }}</p>
-    </div>
-  </div>
-
-  @if (actionError()) {
-    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
-  }
-
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading recruiter profiles...</div>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="error-state">
-      <h2 class="error-state__title">{{ errorMessage() }}</h2>
-      <button class="btn btn--secondary" type="button" (click)="loadRecruiters()">Retry</button>
-    </div>
-  } @else if (recruiters().length === 0) {
-    <div class="empty-state">
-      <h2 class="empty-state__title">No recruiter profiles found</h2>
-      <p class="empty-state__message">Recruiter profiles are created during recruiter registration.</p>
-    </div>
-  } @else {
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Profile ID</th>
-            <th>Name</th>
-            <th>Identity user ID</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (recruiter of recruiters(); track recruiter.id) {
-            <tr>
-              <td>#{{ recruiter.id }}</td>
-              <td>
-                @if (editingId() === recruiter.id) {
-                  <input
-                    class="form-control table-input"
-                    [formControl]="editForm.controls.name"
-                    aria-label="Recruiter name"
-                  />
-                  @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
-                    <div class="form-error">A name of at most 200 characters is required.</div>
-                  }
-                } @else {
-                  <strong>{{ recruiter.name }}</strong>
-                }
-              </td>
-              <td><code>{{ recruiter.userId }}</code></td>
-              <td>
-                <div class="action-buttons">
-                  @if (editingId() === recruiter.id) {
-                    <button
-                      class="btn btn--primary btn--sm"
-                      type="button"
-                      [disabled]="pendingId() === recruiter.id"
-                      (click)="saveRecruiter(recruiter.id)"
-                    >
-                      {{ pendingId() === recruiter.id ? 'Saving...' : 'Save' }}
-                    </button>
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="cancelEdit()">Cancel</button>
-                  } @else if (confirmDeleteId() === recruiter.id) {
-                    <span class="confirmation-text">Delete this profile?</span>
-                    <button
-                      class="btn btn--danger btn--sm"
-                      type="button"
-                      [disabled]="pendingId() === recruiter.id"
-                      (click)="deleteRecruiter(recruiter.id)"
-                    >
-                      {{ pendingId() === recruiter.id ? 'Deleting...' : 'Confirm' }}
-                    </button>
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
-                  } @else {
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="startEdit(recruiter)">Edit</button>
-                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(recruiter.id)">Delete</button>
-                  }
-                </div>
-              </td>
-            </tr>
+<div class="admin-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/admin/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">
+          Recruiter Profiles
+          @if (!isLoading() && totalCount() > 0) {
+            <span class="count-badge">{{ totalCount() }}</span>
           }
-        </tbody>
-      </table>
+        </h1>
+        <p class="page-subtitle">Directory of corporate recruiters and hiring managers managing job postings.</p>
+      </div>
     </div>
 
-    @if (totalPages() > 1) {
-      <nav class="pagination" aria-label="Recruiter profile pages">
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="previousPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
-          Next
-        </button>
-      </nav>
+    @if (actionError()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ actionError() }}</span>
+      </div>
     }
-  }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading recruiter directory...</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="loadRecruiters()">Retry</button>
+      </div>
+    } @else if (recruiters().length === 0) {
+      <app-empty-state
+        icon=""
+        title="No recruiters found"
+        message="Recruiter profiles are created during recruiter registration."
+      />
+    } @else {
+      <div class="table-card card">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Recruiter</th>
+                <th>Identity User ID</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (recruiter of recruiters(); track recruiter.id) {
+                <tr>
+                  <td>
+                    <div class="recruiter-identity">
+                      <div class="recruiter-avatar">
+                        <span>{{ recruiter.name ? recruiter.name[0] : 'R' }}</span>
+                      </div>
+                      <div class="recruiter-meta">
+                        @if (editingId() === recruiter.id) {
+                          <div class="inline-edit-field">
+                            <input
+                              class="form-control"
+                              [formControl]="editForm.controls.name"
+                              aria-label="Recruiter name"
+                              placeholder="Recruiter name"
+                            />
+                            @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+                              <span class="form-error">Name of at most 200 characters is required.</span>
+                            }
+                          </div>
+                        } @else {
+                          <strong class="recruiter-name">{{ recruiter.name }}</strong>
+                        }
+                        <span class="recruiter-id">Profile #{{ recruiter.id }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <code class="user-id-code">{{ recruiter.userId }}</code>
+                  </td>
+                  <td class="text-right">
+                    <div class="actions-group">
+                      @if (editingId() === recruiter.id) {
+                        <button
+                          class="btn btn--primary btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === recruiter.id"
+                          (click)="saveRecruiter(recruiter.id)"
+                        >
+                          {{ pendingId() === recruiter.id ? 'Saving...' : 'Save' }}
+                        </button>
+                        <button class="btn btn--outline btn--sm" type="button" (click)="cancelEdit()">Cancel</button>
+                      } @else if (confirmDeleteId() === recruiter.id) {
+                        <span class="inline-confirm">
+                          <span>Delete?</span>
+                          <button
+                            class="btn btn--danger btn--sm"
+                            type="button"
+                            [disabled]="pendingId() === recruiter.id"
+                            (click)="deleteRecruiter(recruiter.id)"
+                          >
+                            {{ pendingId() === recruiter.id ? '...' : 'Yes' }}
+                          </button>
+                          <button class="btn btn--outline btn--sm" type="button" (click)="cancelDelete()">Cancel</button>
+                        </span>
+                      } @else {
+                        <button class="btn btn--outline btn--sm" type="button" (click)="startEdit(recruiter)">Edit</button>
+                        <button
+                          class="btn btn--danger-subtle btn--sm"
+                          type="button"
+                          (click)="requestDelete(recruiter.id)"
+                        >
+                          Delete
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
 </div>

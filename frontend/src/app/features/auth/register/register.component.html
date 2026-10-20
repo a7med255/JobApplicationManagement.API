@@ -1,8 +1,14 @@
 <div class="auth-container">
   <div class="card auth-card">
     <div class="auth-header">
-      <h1 class="auth-title">Create Account</h1>
-      <p class="auth-subtitle">Join {{ appConfig.name }} today</p>
+      <div class="auth-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+      </div>
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-subtitle">Join {{ appConfig.name }} to discover opportunities or hire talent</p>
     </div>
 
     @if (errorMessage()) {
@@ -10,6 +16,40 @@
         {{ errorMessage() }}
       </div>
     }
+
+    <!-- Obvious Dual Role Selector -->
+    <div class="role-selector" role="group" aria-label="Account Type">
+      <span class="role-selector__heading">I want to:</span>
+      <div class="role-selector__grid">
+        <button
+          type="button"
+          class="role-card"
+          [class.role-card--active]="form.controls.role.value === 'Candidate'"
+          [attr.aria-pressed]="form.controls.role.value === 'Candidate'"
+          (click)="setRole('Candidate')"
+        >
+          <span class="role-card__icon" aria-hidden="true">JOB</span>
+          <div class="role-card__text">
+            <strong class="role-card__title">Find a Job</strong>
+            <span class="role-card__desc">Candidate</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          class="role-card"
+          [class.role-card--active]="form.controls.role.value === 'Recruiter'"
+          [attr.aria-pressed]="form.controls.role.value === 'Recruiter'"
+          (click)="setRole('Recruiter')"
+        >
+          <span class="role-card__icon" aria-hidden="true">HIRE</span>
+          <div class="role-card__text">
+            <strong class="role-card__title">Hire Talent</strong>
+            <span class="role-card__desc">Recruiter</span>
+          </div>
+        </button>
+      </div>
+    </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
       <div class="form-group">
@@ -20,23 +60,23 @@
           autocomplete="name"
           formControlName="fullName"
           class="form-control"
-          placeholder="John Doe"
+          placeholder="e.g. Abdallah Ahmed"
           [class.ng-invalid]="isFieldInvalid('fullName')"
         />
         @if (isFieldInvalid('fullName')) {
-          <div class="form-error">Full Name is required (max 200 chars).</div>
+          <div class="form-error">Full name is required (maximum 200 characters).</div>
         }
       </div>
 
       <div class="form-group">
-        <label for="email" class="form-label">Email address</label>
+        <label for="email" class="form-label">Email Address</label>
         <input
           id="email"
           type="email"
           autocomplete="email"
           formControlName="email"
           class="form-control"
-          placeholder="you@example.com"
+          placeholder="name@example.com"
           [class.ng-invalid]="isFieldInvalid('email')"
         />
         @if (isFieldInvalid('email')) {
@@ -52,27 +92,14 @@
           autocomplete="new-password"
           formControlName="password"
           class="form-control"
-          placeholder="••••••••"
+          placeholder="At least 8 characters"
           [class.ng-invalid]="isFieldInvalid('password')"
+          aria-describedby="password-help"
         />
         @if (isFieldInvalid('password')) {
           <div class="form-error">{{ passwordErrorMessage() }}</div>
-        }
-      </div>
-
-      <div class="form-group">
-        <label for="role" class="form-label">I am a...</label>
-        <select
-          id="role"
-          formControlName="role"
-          class="form-control"
-          [class.ng-invalid]="isFieldInvalid('role')"
-        >
-          <option value="Candidate">Candidate (Looking for jobs)</option>
-          <option value="Recruiter">Recruiter (Hiring talent)</option>
-        </select>
-        @if (isFieldInvalid('role')) {
-          <div class="form-error">Please select a role.</div>
+        } @else {
+          <span id="password-help" class="form-helper">Must be 8+ characters with uppercase, lowercase, and a number.</span>
         }
       </div>
 

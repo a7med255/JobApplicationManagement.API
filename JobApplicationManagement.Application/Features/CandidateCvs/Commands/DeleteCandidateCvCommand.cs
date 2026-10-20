@@ -12,11 +12,16 @@ public class DeleteCandidateCvCommandHandler : IRequestHandler<DeleteCandidateCv
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IFileStorageService _fileStorage;
 
-    public DeleteCandidateCvCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+    public DeleteCandidateCvCommandHandler(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService,
+        IFileStorageService fileStorage)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _fileStorage = fileStorage;
     }
 
     public async Task Handle(DeleteCandidateCvCommand request, CancellationToken cancellationToken)
@@ -30,6 +35,7 @@ public class DeleteCandidateCvCommandHandler : IRequestHandler<DeleteCandidateCv
 
         var wasDefault = cv.IsDefault;
         cv.IsDeleted = true;
+        cv.DeletedAt = DateTime.UtcNow;
         cv.IsDefault = false;
         if (wasDefault)
         {
@@ -41,6 +47,11 @@ public class DeleteCandidateCvCommandHandler : IRequestHandler<DeleteCandidateCv
                 replacement.IsDefault = true;
         }
 
-        await _unitOfWork.SaveChangesAsync();
+        var isReferenced = await _unitOfWork.JobApplications.Query().AsNoTracking()
+            .AnyAsync(item => item.SubmittedCvId == cv.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (!isReferenced && !string.IsNullOrWhiteSpace(cv.StorageKey))
+            await _fileStorage.DeleteAsync(cv.StorageKey, cv.ResourceType, cv.DeliveryType, cancellationToken);
     }
 }

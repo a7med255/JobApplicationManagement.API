@@ -6,9 +6,12 @@ import { CandidateResponse } from '../../../core/models/candidate.models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { CandidatesService } from '../../../core/services/candidates.service';
 
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+
 @Component({
   selector: 'app-admin-candidates',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, EmptyStateComponent, PaginationComponent],
   templateUrl: './admin-candidates.component.html',
   styleUrl: './admin-candidates.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +36,11 @@ export class AdminCandidatesComponent implements OnInit {
   protected readonly editForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
     cvUrl: [''],
+    professionalTitle: [''],
+    summary: [''],
+    country: [''],
+    city: [''],
+    yearsOfExperience: this.formBuilder.control<number | null>(null),
   });
 
   ngOnInit(): void {
@@ -63,7 +71,11 @@ export class AdminCandidatesComponent implements OnInit {
     this.editingId.set(candidate.id);
     this.confirmDeleteId.set(null);
     this.actionError.set(null);
-    this.editForm.setValue({ name: candidate.name, cvUrl: candidate.cvUrl });
+    this.editForm.setValue({
+      name: candidate.name, cvUrl: candidate.cvUrl,
+      professionalTitle: candidate.professionalTitle ?? '', summary: candidate.summary ?? '',
+      country: candidate.country ?? '', city: candidate.city ?? '', yearsOfExperience: candidate.yearsOfExperience,
+    });
   }
 
   cancelEdit(): void {
@@ -119,6 +131,15 @@ export class AdminCandidatesComponent implements OnInit {
           this.actionError.set(this.apiError.getMessage(error, 'Failed to delete the candidate profile.'));
         },
       });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId.set(null);
+  }
+
+  onPageChange(page: number): void {
+    this.pageNumber.set(page);
+    this.loadCandidates();
   }
 
   previousPage(): void {

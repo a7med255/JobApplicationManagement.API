@@ -9,7 +9,7 @@ public interface IRefreshTokenService
     /// <summary>
     /// Stores a new refresh token for a user.
     /// </summary>
-    Task StoreRefreshTokenAsync(string userId, string refreshToken, DateTime expiresAt);
+    Task StoreRefreshTokenAsync(string userId, string refreshToken, DateTime expiresAt, string? createdByIp = null);
 
     /// <summary>
     /// Validates a refresh token. Returns the associated userId if valid, null if invalid/expired/revoked.
@@ -19,5 +19,13 @@ public interface IRefreshTokenService
     /// <summary>
     /// Revokes a specific refresh token.
     /// </summary>
-    Task RevokeRefreshTokenAsync(string refreshToken);
+    Task RevokeRefreshTokenAsync(string refreshToken, string? revokedByIp = null);
+
+    Task<string?> RotateRefreshTokenAsync(
+        string currentRefreshToken,
+        string newRefreshToken,
+        DateTime expiresAt,
+        string? createdByIp = null);
+
+    Task RevokeAllForUserAsync(string userId);
 }

@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -15,13 +15,14 @@ type RegisterField = 'fullName' | 'email' | 'password' | 'role';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
-  styleUrl: '../login/login.component.scss', // Reuse login styles
+  styleUrl: '../login/login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly apiError = inject(ApiErrorService);
   protected readonly appConfig = APP_CONFIG;
 
@@ -45,6 +46,19 @@ export class RegisterComponent {
     role: ['Candidate' as RegistrationRole, [Validators.required]],
   });
 
+  ngOnInit(): void {
+    const roleParam = this.route.snapshot.queryParamMap.get('role');
+    if (roleParam === 'Recruiter') {
+      this.form.controls.role.setValue('Recruiter');
+    } else if (roleParam === 'Candidate') {
+      this.form.controls.role.setValue('Candidate');
+    }
+  }
+
+  setRole(selectedRole: RegistrationRole): void {
+    this.form.controls.role.setValue(selectedRole);
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -58,10 +72,7 @@ export class RegisterComponent {
       .register(this.form.getRawValue())
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (res) => {
-          // Navigating to verify email with the email parameter. 
-          // For testing purposes, we log the OTP to the console.
-          console.log('TESTING ONLY - Registration OTP:', res.otp);
+        next: () => {
           void this.router.navigate(['/verify-email'], { queryParams: { email: this.form.getRawValue().email } });
         },
         error: (error: HttpErrorResponse) => {
@@ -85,6 +96,6 @@ export class RegisterComponent {
     if (password.hasError('required')) return 'Password is required.';
     if (password.hasError('minlength')) return 'Password must be at least 8 characters.';
     if (password.hasError('maxlength')) return 'Password must not exceed 100 characters.';
-    return 'Use at least one uppercase letter, one lowercase letter, and one number.';
+    return 'Must include at least one uppercase letter, one lowercase letter, and one number.';
   }
 }

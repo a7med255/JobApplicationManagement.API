@@ -37,7 +37,7 @@ export class AdminDashboardComponent implements OnInit {
     this.hasPartialError.set(false);
 
     forkJoin({
-      jobs: this.jobsService.getAll(1, 1).pipe(catchError(() => of(null))),
+      jobs: this.jobsService.getAll(1, 1, { includeInactive: true }).pipe(catchError(() => of(null))),
       applications: this.applicationsService.getAll(1, 1).pipe(catchError(() => of(null))),
       candidates: this.candidatesService.getAll(1, 1).pipe(catchError(() => of(null))),
       recruiters: this.recruitersService.getAll(1, 1).pipe(catchError(() => of(null))),

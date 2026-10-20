@@ -13,43 +13,51 @@ import { APP_CONFIG } from '../../../core/config/app.constants';
   imports: [ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-container">
-      <div class="auth-card">
-        <h1 class="auth-title">Verify Email</h1>
-        <p class="auth-subtitle">Enter the 6-digit OTP sent to {{ email() }}</p>
+      <div class="card auth-card">
+        <div class="auth-header">
+          <div class="auth-logo" aria-hidden="true">6</div>
+          <h1 class="auth-title">Verify your email</h1>
+          <p class="auth-subtitle">Enter the six-digit code sent to {{ email() }}.</p>
+        </div>
 
         @if (successMessage()) {
-          <div class="alert alert-success">{{ successMessage() }}</div>
+          <div class="alert alert--success" role="status">{{ successMessage() }}</div>
         }
         @if (errorMessage()) {
-          <div class="alert alert-error">{{ errorMessage() }}</div>
+          <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div>
         }
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
           <div class="form-group">
-            <label for="otp">One-Time Password</label>
+            <label for="otp" class="form-label">One-time code</label>
             <input
               id="otp"
               type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
               formControlName="otp"
+              class="form-control"
               placeholder="123456"
               [attr.aria-invalid]="isFieldInvalid('otp')"
             />
             @if (isFieldInvalid('otp')) {
-              <span class="error-text">OTP is required</span>
+              <div class="form-error">Enter the six-digit code.</div>
             }
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading() || form.invalid">
+          <button type="submit" class="btn btn--primary btn--block btn--lg auth-submit" [disabled]="isLoading()" [attr.aria-busy]="isLoading()">
             @if (isLoading()) {
-              <span class="spinner"></span>
+              <span class="spinner"></span> Verifying...
             } @else {
-              Verify Account
+              Verify account
             }
           </button>
         </form>
 
-        <div class="auth-links">
-          <p>Didn't receive the email? <button class="btn-link" (click)="resend()">Resend OTP</button></p>
+        <div class="auth-footer">
+          <p class="auth-footer-text">Didn't receive it? <button type="button" class="btn-link" (click)="resend()" [disabled]="isLoading()">Resend code</button></p>
+          <p class="auth-footer-text mt-2"><a routerLink="/login" class="auth-link">Back to sign in</a></p>
         </div>
       </div>
     </div>
@@ -70,7 +78,7 @@ export class VerifyEmailComponent implements OnInit {
   protected readonly email = signal('');
 
   protected readonly form = this.fb.nonNullable.group({
-    otp: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
+    otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
   });
 
   ngOnInit() {
@@ -83,7 +91,10 @@ export class VerifyEmailComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -110,7 +121,7 @@ export class VerifyEmailComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.successMessage.set('OTP resent successfully. For testing: ' + res.otp);
+          this.successMessage.set(res?.message || 'Verification code resent successfully. Please check your email.');
         },
         error: (error: HttpErrorResponse) => {
           this.errorMessage.set(this.apiError.getMessage(error, 'Failed to resend.'));

@@ -13,6 +13,8 @@ public class ApplyForJobWithCvTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<ICurrentUserService> _currentUser = new();
+    private readonly Mock<IIdentityService> _identity = new();
+    private readonly Mock<IEmailQueue> _emailQueue = new();
 
     [Fact]
     public async Task Candidate_Can_Apply_Using_Own_Cv()
@@ -35,7 +37,7 @@ public class ApplyForJobWithCvTests
             .Returns(Task.CompletedTask);
         _unitOfWork.Setup(unit => unit.SaveChangesAsync()).ReturnsAsync(1);
 
-        var handler = new ApplyForJobCommandHandler(_unitOfWork.Object, _currentUser.Object);
+        var handler = CreateHandler();
         var result = await handler.Handle(
             new ApplyForJobCommand(new CreateJobApplicationDto { JobId = job.Id, CandidateCvId = cv.Id }),
             CancellationToken.None);
@@ -52,7 +54,7 @@ public class ApplyForJobWithCvTests
         var foreignCv = new CandidateCv { Id = 9, CandidateId = 2, DisplayName = "Foreign" };
         var job = PublishedJob();
         Setup(candidate, job, [foreignCv], []);
-        var handler = new ApplyForJobCommandHandler(_unitOfWork.Object, _currentUser.Object);
+        var handler = CreateHandler();
 
         await Assert.ThrowsAsync<ConflictException>(() => handler.Handle(
             new ApplyForJobCommand(new CreateJobApplicationDto { JobId = job.Id, CandidateCvId = foreignCv.Id }),
@@ -73,7 +75,7 @@ public class ApplyForJobWithCvTests
         job.Status = status;
         job.ApplicationDeadline = pastDeadline ? DateTime.UtcNow.AddDays(-1) : DateTime.UtcNow.AddDays(1);
         Setup(candidate, job, [], []);
-        var handler = new ApplyForJobCommandHandler(_unitOfWork.Object, _currentUser.Object);
+        var handler = CreateHandler();
 
         await Assert.ThrowsAsync<ConflictException>(() => handler.Handle(
             new ApplyForJobCommand(new CreateJobApplicationDto { JobId = job.Id }),
@@ -95,7 +97,25 @@ public class ApplyForJobWithCvTests
             .Returns(new SavedJobTestAsyncEnumerable<CandidateCv>(cvs));
         _unitOfWork.Setup(unit => unit.JobApplications.Query())
             .Returns(new SavedJobTestAsyncEnumerable<JobApplication>(applications));
+        _unitOfWork.Setup(unit => unit.NotificationPreferences.Query())
+            .Returns(new SavedJobTestAsyncEnumerable<NotificationPreference>(Array.Empty<NotificationPreference>()));
+        _identity.Setup(x => x.GetUserByIdAsync(candidate.UserId))
+            .ReturnsAsync((candidate.UserId, "candidate@example.com", (IEnumerable<string>)["Candidate"]));
+        if (job.Recruiter is not null)
+        {
+            _identity.Setup(x => x.GetUserByIdAsync(job.Recruiter.UserId))
+                .ReturnsAsync((job.Recruiter.UserId, "recruiter@example.com", (IEnumerable<string>)["Recruiter"]));
+        }
+        _emailQueue.Setup(x => x.QueueAsync(It.IsAny<JobApplicationManagement.Application.Common.Models.EmailMessage>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWork.Setup(x => x.ApplicationStatusHistory.AddAsync(It.IsAny<ApplicationStatusHistory>())).Returns(Task.CompletedTask);
+        _unitOfWork.Setup(x => x.Notifications.AddAsync(It.IsAny<Notification>())).Returns(Task.CompletedTask);
+        _unitOfWork.Setup(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task>, CancellationToken>((operation, token) => operation(token));
     }
+
+    private ApplyForJobCommandHandler CreateHandler() =>
+        new(_unitOfWork.Object, _currentUser.Object, _identity.Object, _emailQueue.Object);
 
     private static Job PublishedJob() => new()
     {
@@ -103,5 +123,7 @@ public class ApplyForJobWithCvTests
         Title = "Developer",
         Status = JobStatus.Published,
         ApplicationDeadline = DateTime.UtcNow.AddDays(7)
+        ,Company = new Company { Id = 3, Name = "Careerly" }
+        ,Recruiter = new Recruiter { Id = 4, UserId = "recruiter-1", Name = "Recruiter" }
     };
 }

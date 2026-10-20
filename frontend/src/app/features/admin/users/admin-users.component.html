@@ -1,0 +1,229 @@
+<div class="admin-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/admin/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">Users &amp; System Operations</h1>
+        <p class="page-subtitle">Manage user account security, permissions, roles, and inspect background message delivery.</p>
+      </div>
+    </div>
+
+    @if (error()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="load()">Retry</button>
+      </div>
+    }
+
+    <!-- Tab navigation -->
+    <div class="tabs-nav mb-4">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'users'"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'users'"
+        (click)="activeTab.set('users')"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>User Accounts</span>
+        @if (!loading() && users().length > 0) {
+          <span class="tab-badge">{{ users().length }} on page</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'failures'"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'failures'"
+        (click)="activeTab.set('failures')"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <span>Email Delivery Failures</span>
+        @if (!loading() && failures().length > 0) {
+          <span class="tab-badge tab-badge--danger">{{ failures().length }}</span>
+        }
+      </button>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading administration data...</p>
+      </div>
+    } @else {
+      <!-- Tab 1: Users -->
+      @if (activeTab() === 'users') {
+        @if (users().length === 0) {
+          <app-empty-state
+            icon=""
+            title="No users found"
+            message="No registered user accounts found in the database."
+          />
+        } @else {
+          <div class="table-card card">
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>User Identity</th>
+                    <th>Email Status</th>
+                    <th>Role Assignment</th>
+                    <th>Account Status</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (user of users(); track user.userId) {
+                    <tr>
+                      <td>
+                        <div class="user-cell">
+                          <strong class="user-fullname">{{ user.fullName }}</strong>
+                          <span class="user-email">{{ user.email }}</span>
+                          <code class="user-id-code">{{ user.userId }}</code>
+                        </div>
+                      </td>
+                      <td>
+                        @if (user.emailConfirmed) {
+                          <span class="status-pill status-pill--success">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Verified
+                          </span>
+                        } @else {
+                          <span class="status-pill status-pill--warning">Pending</span>
+                        }
+                      </td>
+                      <td>
+                        <div class="role-selector-wrapper">
+                          <select
+                            class="form-control role-select"
+                            [value]="user.roles[0]"
+                            (change)="changeRole(user, $event)"
+                            [disabled]="pendingUserId() === user.userId"
+                            [attr.aria-label]="'Role for ' + user.fullName"
+                          >
+                            @for (role of roles; track role) {
+                              <option [value]="role">{{ role }}</option>
+                            }
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        @if (user.isLocked) {
+                          <span class="status-pill status-pill--danger">Locked</span>
+                        } @else {
+                          <span class="status-pill status-pill--success">Active</span>
+                        }
+                      </td>
+                      <td class="text-right">
+                        <button
+                          class="btn btn--sm"
+                          [class.btn--danger-subtle]="!user.isLocked"
+                          [class.btn--outline]="user.isLocked"
+                          type="button"
+                          [disabled]="pendingUserId() === user.userId"
+                          (click)="toggleLock(user)"
+                        >
+                          @if (pendingUserId() === user.userId) {
+                            Updating...
+                          } @else if (user.isLocked) {
+                            Unlock Account
+                          } @else {
+                            Lock Account
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="user-pagination" aria-label="User pages">
+            <button type="button" class="btn btn--outline btn--sm" (click)="previousPage()" [disabled]="pageNumber() === 1">Previous</button>
+            <span>Page {{ pageNumber() }}</span>
+            <button type="button" class="btn btn--outline btn--sm" (click)="nextPage()" [disabled]="!hasNextPage()">Next</button>
+          </div>
+        }
+      }
+
+      <!-- Tab 2: Outbox Failures -->
+      @if (activeTab() === 'failures') {
+        @if (failures().length === 0) {
+          <app-empty-state
+            icon=""
+            title="All clear! No delivery failures"
+            message="All transactional emails and notifications have been delivered successfully."
+          />
+        } @else {
+          <div class="table-card card">
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Message Type</th>
+                    <th>Attempts</th>
+                    <th>Occurred At</th>
+                    <th>Next Retry</th>
+                    <th>Failure Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (failure of failures(); track failure.id) {
+                    <tr>
+                      <td>
+                        <strong class="failure-type">{{ failure.type }}</strong>
+                        <span class="failure-id">ID: <code>{{ failure.id }}</code></span>
+                      </td>
+                      <td>
+                        <span class="attempt-badge">{{ failure.attemptCount }} attempts</span>
+                      </td>
+                      <td>
+                        <span class="date-text">{{ failure.occurredAt | date:'medium' }}</span>
+                      </td>
+                      <td>
+                        <span class="date-text">
+                          {{ failure.nextAttemptAt ? (failure.nextAttemptAt | date:'medium') : 'Manual review required' }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="error-snippet" [title]="failure.lastError || ''">
+                          {{ failure.lastError || 'Unknown failure' }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

@@ -1,49 +1,343 @@
-<div class="container cv-page">
-  <div class="page-header">
-    <div>
-      <a routerLink="/candidate/dashboard" class="back-link">&larr; Back to dashboard</a>
-      <h1 class="page-header__title mt-3">My CVs</h1>
-      <p class="page-header__subtitle">Keep multiple CV versions and choose the right one for each application.</p>
+<div class="cv-page">
+  <div class="container">
+    <!-- Header -->
+    <div class="cv-page__header">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a routerLink="/candidate/dashboard" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Dashboard
+        </a>
+      </nav>
+      <div class="header-titles">
+        <h1 class="page-title">Manage Resumes & CVs</h1>
+        <p class="page-subtitle">Upload multiple versions of your resume, set your primary default, and preview documents.</p>
+      </div>
     </div>
-  </div>
 
-  @if (errorMessage()) { <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div> }
-
-  <section class="card upload-card">
-    <h2>Upload a new CV</h2>
-    <form [formGroup]="uploadForm" (ngSubmit)="upload()" class="upload-form">
-      <div class="form-group">
-        <label class="form-label" for="cv-name">CV name</label>
-        <input id="cv-name" class="form-control" formControlName="displayName" placeholder="e.g. Frontend Engineer CV">
+    <!-- Feedback Alerts -->
+    @if (successMessage()) {
+      <div class="alert alert--success mb-4" role="status">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>{{ successMessage() }}</span>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="cv-file">File (PDF, DOC or DOCX, max 5 MB)</label>
-        <input id="cv-file" class="form-control" type="file" accept=".pdf,.doc,.docx" (change)="chooseFile($event)">
-      </div>
-      <label class="default-check"><input type="checkbox" formControlName="setAsDefault"> Make this my default CV</label>
-      <button class="btn btn--primary" type="submit" [disabled]="isUploading()">{{ isUploading() ? 'Uploading...' : 'Upload CV' }}</button>
-    </form>
-  </section>
-
-  <section class="cv-list" aria-live="polite">
-    @if (isLoading()) {
-      <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading CVs...</div></div>
-    } @else if (cvs().length === 0) {
-      <div class="empty-state"><h2 class="empty-state__title">No CVs uploaded</h2><p class="empty-state__message">Upload your first CV to start applying.</p></div>
-    } @else {
-      @for (cv of cvs(); track cv.id) {
-        <article class="card cv-card">
-          <div>
-            <div class="cv-card__title-row"><h2>{{ cv.displayName }}</h2>@if (cv.isDefault) { <span class="badge badge--active">Default</span> }</div>
-            <p>{{ cv.originalFileName }} · {{ cv.fileSize / 1024 | number:'1.0-0' }} KB · Uploaded {{ cv.uploadedAt | date:'mediumDate' }}</p>
-          </div>
-          <div class="cv-card__actions">
-            <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === cv.id" (click)="download(cv)">Download</button>
-            @if (!cv.isDefault) { <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === cv.id" (click)="setDefault(cv.id)">Set default</button> }
-            <button class="btn btn--danger btn--sm" type="button" [disabled]="pendingId() === cv.id" (click)="delete(cv.id)">Delete</button>
-          </div>
-        </article>
-      }
     }
-  </section>
+
+    @if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Upload Section -->
+    <section class="card upload-section mb-5">
+      <div class="section-heading">
+        <div class="section-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <div>
+          <h2 class="section-title">Upload a New Resume</h2>
+          <p class="section-subtitle">Add a tailored PDF resume for specific roles.</p>
+        </div>
+      </div>
+
+      <form [formGroup]="uploadForm" (ngSubmit)="upload()" class="upload-form">
+        <!-- Drag & Drop Zone -->
+        <div
+          class="dropzone"
+          [class.drag-over]="isDragOver()"
+          [class.has-file]="!!selectedFile()"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+        >
+          @if (!selectedFile()) {
+            <div class="dropzone-empty">
+              <div class="dropzone-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <polyline points="9 15 12 12 15 15"></polyline>
+                </svg>
+              </div>
+              <div class="dropzone-text">
+                <p class="dropzone-main">Drag and drop your resume PDF here, or <span class="browse-link">browse files</span></p>
+                <p class="dropzone-sub">Genuine PDF files only &bull; Maximum size {{ maximumCvMegabytes }} MB</p>
+              </div>
+            </div>
+          } @else {
+            <div class="selected-file-preview">
+              <div class="file-icon-badge">
+                <span>PDF</span>
+              </div>
+              <div class="file-info">
+                <span class="file-name">{{ selectedFile()?.name }}</span>
+                <span class="file-size">{{ (selectedFile()?.size ?? 0) / 1024 | number:'1.0-0' }} KB</span>
+              </div>
+              <button type="button" class="btn-remove-file" (click)="clearSelectedFile()" title="Remove file">
+                &times;
+              </button>
+            </div>
+          }
+
+          <input
+            id="cv-file-input"
+            type="file"
+            accept=".pdf,application/pdf"
+            (change)="chooseFile($event)"
+            class="file-input-hidden"
+          />
+        </div>
+
+        <!-- Form fields when file is chosen or configured -->
+        <div class="form-row mt-3">
+          <div class="form-group flex-1">
+            <label class="form-label" for="cv-name">Resume Label / Title</label>
+            <input
+              id="cv-name"
+              type="text"
+              class="form-control"
+              formControlName="displayName"
+              placeholder="e.g. Senior Full-Stack Engineer Resume"
+            />
+          </div>
+
+          <div class="upload-options">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="setAsDefault" />
+              <span>Make this my default resume</span>
+            </label>
+
+            <button
+              class="btn btn--primary"
+              type="submit"
+              [disabled]="isUploading() || !selectedFile() || uploadForm.invalid"
+            >
+              @if (isUploading()) {
+                <span class="spinner"></span>
+                <span>Uploading...</span>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Upload Resume</span>
+              }
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- CVs List -->
+    <section class="cv-list-section" aria-live="polite">
+      <div class="list-header">
+        <h2 class="list-title">
+          Uploaded Resumes
+          @if (!isLoading()) {
+            <span class="count-badge">{{ cvs().length }}</span>
+          }
+        </h2>
+      </div>
+
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading your resumes...</p>
+        </div>
+      } @else if (cvs().length === 0) {
+        <app-empty-state
+          icon=""
+          title="No resumes uploaded yet"
+          message="Upload your first PDF resume above to start applying with one click."
+        />
+      } @else {
+        <div class="cv-cards-grid">
+          @for (cv of cvs(); track cv.id) {
+            <article class="card cv-card" [class.is-default]="cv.isDefault">
+              <div class="cv-card__body">
+                <div class="cv-card__icon-box">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  <span class="ext-badge">PDF</span>
+                </div>
+
+                <div class="cv-card__details">
+                  <div class="cv-card__title-row">
+                    <h3 class="cv-card__title">{{ cv.displayName }}</h3>
+                    @if (cv.isDefault) {
+                      <span class="default-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Default Resume
+                      </span>
+                    }
+                  </div>
+
+                  <div class="cv-card__meta">
+                    <span class="meta-item filename">{{ cv.originalFileName }}</span>
+                    <span class="meta-separator">&bull;</span>
+                    <span class="meta-item">{{ cv.fileSize / 1024 | number:'1.0-0' }} KB</span>
+                    <span class="meta-separator">&bull;</span>
+                    <span class="meta-item">Added {{ cv.uploadedAt | date:'mediumDate' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cv-card__actions">
+                <button
+                  class="btn btn--outline btn--sm"
+                  type="button"
+                  [disabled]="pendingId() === cv.id"
+                  (click)="preview(cv)"
+                  title="Open preview in a new tab"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <span>Preview</span>
+                </button>
+
+                <button
+                  class="btn btn--outline btn--sm"
+                  type="button"
+                  [disabled]="pendingId() === cv.id"
+                  (click)="download(cv)"
+                  title="Download PDF"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Download</span>
+                </button>
+
+                <button
+                  class="btn btn--outline btn--sm"
+                  type="button"
+                  [disabled]="pendingId() === cv.id"
+                  (click)="startRename(cv)"
+                  title="Rename resume label"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                  </svg>
+                  <span>Rename</span>
+                </button>
+
+                @if (!cv.isDefault) {
+                  <button
+                    class="btn btn--secondary btn--sm"
+                    type="button"
+                    [disabled]="pendingId() === cv.id"
+                    (click)="setDefault(cv.id)"
+                    title="Make this your primary default resume"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 14 14"></polyline>
+                    </svg>
+                    <span>Set Default</span>
+                  </button>
+                }
+
+                <button
+                  class="btn btn--danger-subtle btn--sm"
+                  type="button"
+                  [disabled]="pendingId() === cv.id"
+                  (click)="requestDelete(cv)"
+                  title="Delete this resume"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  <span>Delete</span>
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Rename Modal -->
+    @if (renamingCv(); as activeCv) {
+      <div class="modal-backdrop" (click)="cancelRename()">
+        <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="rename-cv-title">
+          <div class="modal-header">
+            <h3 id="rename-cv-title" class="modal-title">Rename Resume Label</h3>
+            <button type="button" class="btn-close" (click)="cancelRename()" aria-label="Close modal">&times;</button>
+          </div>
+          <form [formGroup]="renameForm" (ngSubmit)="saveRename()">
+            <div class="modal-body">
+              <label class="form-label" for="rename-input">New Resume Label</label>
+              <input
+                id="rename-input"
+                class="form-control"
+                formControlName="displayName"
+                placeholder="e.g. Senior .NET Backend Resume"
+                autofocus
+              />
+              <span class="field-hint">Max 200 characters. Used to identify this resume when applying.</span>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn--outline" (click)="cancelRename()" [disabled]="isRenaming()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn--primary" [disabled]="isRenaming() || renameForm.invalid">
+                @if (isRenaming()) {
+                  <span class="spinner"></span>
+                  <span>Saving...</span>
+                } @else {
+                  <span>Save Changes</span>
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (deletingCv(); as activeCv) {
+      <div class="modal-backdrop" (click)="cancelDelete()">
+        <div class="modal-card modal-card--compact" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true" aria-labelledby="delete-cv-title" aria-describedby="delete-cv-description">
+          <div class="modal-header">
+            <h3 id="delete-cv-title" class="modal-title">Delete resume?</h3>
+            <button type="button" class="btn-close" (click)="cancelDelete()" aria-label="Close dialog">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p id="delete-cv-description">“{{ activeCv.displayName }}” will be permanently removed. This action cannot be undone.</p>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn--outline" (click)="cancelDelete()">Cancel</button>
+            <button type="button" class="btn btn--danger" (click)="confirmDelete()">Delete resume</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
 </div>

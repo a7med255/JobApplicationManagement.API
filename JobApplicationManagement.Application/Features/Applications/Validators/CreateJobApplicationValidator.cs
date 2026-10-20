@@ -13,6 +13,8 @@ public class CreateJobApplicationValidator : AbstractValidator<CreateJobApplicat
         RuleFor(x => x.CandidateCvId)
             .GreaterThan(0).When(x => x.CandidateCvId.HasValue)
             .WithMessage("CandidateCvId must be greater than 0 when provided.");
+        RuleFor(x => x.CoverLetter)
+            .MaximumLength(5000).WithMessage("Cover letter cannot exceed 5000 characters.");
     }
 }
 

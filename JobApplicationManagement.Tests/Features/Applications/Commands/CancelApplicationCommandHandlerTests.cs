@@ -20,15 +20,13 @@ public class CancelApplicationCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
-    private readonly Mock<IBackgroundJob> _backgroundJobMock;
     private readonly CancelApplicationCommandHandler _handler;
 
     public CancelApplicationCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _backgroundJobMock = new Mock<IBackgroundJob>();
-        _handler = new CancelApplicationCommandHandler(_unitOfWorkMock.Object, _currentUserServiceMock.Object, _backgroundJobMock.Object);
+        _handler = new CancelApplicationCommandHandler(_unitOfWorkMock.Object, _currentUserServiceMock.Object);
     }
 
     [Fact]
@@ -130,7 +128,8 @@ public class CancelApplicationCommandHandlerTests
         _unitOfWorkMock.Setup(u => u.Candidates.Query()).Returns(mockSet.Object);
 
         _unitOfWorkMock.Setup(u => u.JobApplications.Update(It.IsAny<JobApplication>()));
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.ApplicationStatusHistory.AddAsync(It.IsAny<ApplicationStatusHistory>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var command = new CancelApplicationCommand(1);
 
@@ -143,7 +142,7 @@ public class CancelApplicationCommandHandlerTests
         Assert.NotEqual(default, application.StatusUpdatedAt);
 
         _unitOfWorkMock.Verify(u => u.JobApplications.Update(It.Is<JobApplication>(a => a.Id == 1 && a.JobApplicationStatus == JobApplicationStatus.Cancelled)), Times.Once);
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static Mock<DbSet<T>> CreateMockDbSet<T>(IQueryable<T> elements) where T : class

@@ -1,65 +1,105 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">My Profile</h1>
-      <p class="page-header__subtitle">Manage your personal recruiter information.</p>
+<div class="recruiter-profile-page">
+  <div class="container">
+    <div class="page-header">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a routerLink="/recruiter/dashboard" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Dashboard
+        </a>
+      </nav>
+      <h1 class="page-title">Recruiter Profile</h1>
+      <p class="page-subtitle">Manage your personal recruiter details and credentials.</p>
     </div>
-  </div>
 
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading your profile...</div>
-    </div>
-  } @else if (isError()) {
-    <div class="alert alert--danger" role="alert">
-      {{ errorMessage() }}
-    </div>
-  } @else {
-    <div class="card">
-      @if (successMessage()) {
-        <div class="alert alert--success mb-4" role="alert">
-          {{ successMessage() }}
-        </div>
-      }
-      
-      @if (errorMessage()) {
-        <div class="alert alert--danger mb-4" role="alert">
-          {{ errorMessage() }}
-        </div>
-      }
-
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <div class="form-group">
-          <label for="name" class="form-label">Full Name</label>
-          <input
-            id="name"
-            type="text"
-            formControlName="name"
-            class="form-control"
-            placeholder="John Doe"
-            [class.ng-invalid]="isFieldInvalid('name')"
-          />
-          @if (isFieldInvalid('name')) {
-            <div class="form-error">Full Name is required (max 200 chars).</div>
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your profile...</p>
+      </div>
+    } @else if (isError()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="loadProfile()">Retry</button>
+      </div>
+    } @else {
+      <div class="profile-layout">
+        <div class="card profile-card">
+          @if (successMessage()) {
+            <div class="alert alert--success mb-4" role="status">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>{{ successMessage() }}</span>
+            </div>
           }
-        </div>
 
-        <div class="mt-4">
-          <button
-            type="submit"
-            class="btn btn--primary"
-            [disabled]="isSaving()"
-            [attr.aria-busy]="isSaving()"
-          >
-            @if (isSaving()) {
-              <span class="spinner"></span> Saving...
-            } @else {
-              Save Profile
-            }
-          </button>
+          @if (errorMessage()) {
+            <div class="alert alert--danger mb-4" role="alert">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <div class="profile-header-preview">
+            <div class="recruiter-avatar">
+              {{ (form.get('name')?.value || 'R')[0] }}
+            </div>
+            <div>
+              <h2 class="recruiter-name-preview">{{ form.get('name')?.value || 'Recruiter' }}</h2>
+              <span class="role-badge">Verified Recruiter</span>
+            </div>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="profile-form">
+            <div class="form-group">
+              <label for="name" class="form-label required">Full Name</label>
+              <input
+                id="name"
+                type="text"
+                formControlName="name"
+                class="form-control"
+                placeholder="e.g. Sarah Jenkins"
+                [class.ng-invalid]="isFieldInvalid('name')"
+              />
+              @if (isFieldInvalid('name')) {
+                <span class="form-error">Full Name is required (maximum 200 characters).</span>
+              }
+              <span class="field-hint">This name is displayed to candidates when you interact with their applications.</span>
+            </div>
+
+            <div class="form-actions">
+              <a routerLink="/recruiter/dashboard" class="btn btn--outline">
+                Cancel
+              </a>
+              <button
+                type="submit"
+                class="btn btn--primary"
+                [disabled]="isSaving() || form.invalid"
+                [attr.aria-busy]="isSaving()"
+              >
+                @if (isSaving()) {
+                  <span class="spinner"></span>
+                  <span>Saving...</span>
+                } @else {
+                  <span>Save Changes</span>
+                }
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
-    </div>
-  }
+      </div>
+    }
+  </div>
 </div>

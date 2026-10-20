@@ -48,6 +48,7 @@ public class GetMyApplicationsQueryHandler : IRequestHandler<GetMyApplicationsQu
                 CandidateName = a.Candidate.Name,
                 JobId = a.JobId,
                 JobTitle = a.Job.Title,
+                CompanyName = a.Job.Company.Name,
                 SubmittedCvId = a.SubmittedCvId,
                 SubmittedCvDisplayName = a.SubmittedCv == null ? null : a.SubmittedCv.DisplayName,
                 SubmittedCvFileName = a.SubmittedCv == null ? null : a.SubmittedCv.OriginalFileName,
@@ -55,6 +56,7 @@ public class GetMyApplicationsQueryHandler : IRequestHandler<GetMyApplicationsQu
                 AppliedAt = a.AppliedAt,
                 StatusUpdatedAt = a.StatusUpdatedAt,
                 CancelledAt = a.CancelledAt
+                ,CoverLetter = a.CoverLetter
             })
             .ToListAsync(cancellationToken);
 

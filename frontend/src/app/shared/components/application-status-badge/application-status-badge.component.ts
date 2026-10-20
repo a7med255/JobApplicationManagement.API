@@ -8,9 +8,10 @@ const STATUS_CLASSES: Record<JobApplicationStatus, string> = {
   [JobApplicationStatus.Applied]: 'badge--applied',
   [JobApplicationStatus.UnderReview]: 'badge--under-review',
   [JobApplicationStatus.Cancelled]: 'badge--cancelled',
-  [JobApplicationStatus.InterView]: 'badge--interview',
+  [JobApplicationStatus.Interview]: 'badge--interview',
   [JobApplicationStatus.Accepted]: 'badge--accepted',
   [JobApplicationStatus.Rejected]: 'badge--rejected',
+  [JobApplicationStatus.Shortlisted]: 'badge--shortlisted',
 };
 
 @Component({

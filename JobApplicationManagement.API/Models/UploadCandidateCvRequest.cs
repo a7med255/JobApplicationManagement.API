@@ -13,3 +13,10 @@ public class UploadCandidateCvRequest
 
     public bool SetAsDefault { get; set; }
 }
+
+public sealed class RenameCandidateCvRequest
+{
+    [Required]
+    [MaxLength(200)]
+    public string DisplayName { get; set; } = string.Empty;
+}

@@ -1,86 +1,236 @@
-<nav class="navbar" id="main-navbar">
+<header class="navbar" id="main-navbar">
   <div class="navbar__container">
+    <!-- Brand Logo -->
     <a routerLink="/" class="navbar__brand" (click)="closeMenu()">
-      <span class="navbar__logo">C</span>
-      <span class="navbar__title">{{ appConfig.name }}</span>
+      <span class="navbar__logo-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+      </span>
+      <span class="navbar__brand-name">{{ appConfig.name }}</span>
     </a>
 
+    <!-- Mobile Hamburger Toggle -->
     <button
       class="navbar__toggle"
       type="button"
       (click)="toggleMenu()"
-      [attr.aria-expanded]="menuOpen"
+      [attr.aria-expanded]="menuOpen()"
       aria-controls="navbar-menu"
       aria-label="Toggle navigation menu"
     >
-      <span class="navbar__toggle-bar"></span>
-      <span class="navbar__toggle-bar"></span>
-      <span class="navbar__toggle-bar"></span>
+      <span class="navbar__toggle-bar" [class.navbar__toggle-bar--top]="menuOpen()"></span>
+      <span class="navbar__toggle-bar" [class.navbar__toggle-bar--mid]="menuOpen()"></span>
+      <span class="navbar__toggle-bar" [class.navbar__toggle-bar--bot]="menuOpen()"></span>
     </button>
 
-    <div id="navbar-menu" class="navbar__menu" [class.navbar__menu--open]="menuOpen">
-      <a routerLink="/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Jobs</a>
-      @if (auth.isAuthenticated()) {
-        @if (auth.isCandidate()) {
-          <a routerLink="/candidate/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Dashboard
-          </a>
-          <a routerLink="/candidate/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Applications
-          </a>
-          <a routerLink="/candidate/saved-jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Saved Jobs
-          </a>
-          <a routerLink="/candidate/cvs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">CVs</a>
-          <a routerLink="/candidate/profile" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Profile</a>
-        }
-
-        @if (auth.isRecruiter()) {
-          <a routerLink="/recruiter/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Dashboard
-          </a>
-          <a routerLink="/recruiter/jobs/create" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Post Job
-          </a>
-          <a routerLink="/recruiter/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">My Jobs</a>
-          <a routerLink="/recruiter/company" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Company</a>
-          <a routerLink="/recruiter/profile" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">Profile</a>
-          <a routerLink="/recruiter/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Applications
-          </a>
-        }
-
-        @if (auth.isAdmin()) {
-          <a routerLink="/admin/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Dashboard
-          </a>
-          <a routerLink="/admin/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Jobs
-          </a>
-          <a routerLink="/admin/candidates" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Candidates
-          </a>
-          <a routerLink="/admin/recruiters" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Recruiters
-          </a>
-          <a routerLink="/admin/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-            Applications
-          </a>
-        }
-
-        <div class="navbar__user">
-          <span class="navbar__email">{{ auth.userEmail() }}</span>
-          <span class="navbar__role-badge">{{ auth.userRoles()[0] }}</span>
-          <button class="navbar__logout-btn" type="button" (click)="logout()">Logout</button>
-        </div>
-      } @else {
-        <a routerLink="/login" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
-          Login
+    <!-- Main Navigation Menu -->
+    <nav id="navbar-menu" class="navbar__menu" aria-label="Primary navigation" [class.navbar__menu--open]="menuOpen()">
+      <!-- Public Links -->
+      @if (!auth.isAuthenticated()) {
+        <a routerLink="/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Explore Jobs
         </a>
-        <a routerLink="/register" routerLinkActive="navbar__link--active" class="navbar__link navbar__link--cta" (click)="closeMenu()">
-          Register
+        <a routerLink="/register" [queryParams]="{ role: 'Recruiter' }" class="navbar__link navbar__link--employer" (click)="closeMenu()">
+          For Employers
         </a>
       }
-    </div>
+
+      <!-- Candidate Links -->
+      @if (auth.isAuthenticated() && auth.isCandidate()) {
+        <a routerLink="/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Jobs
+        </a>
+        <a routerLink="/candidate/saved-jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Saved Jobs
+        </a>
+        <a routerLink="/candidate/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          My Applications
+        </a>
+      }
+
+      <!-- Recruiter Links -->
+      @if (auth.isAuthenticated() && auth.isRecruiter()) {
+        <a routerLink="/recruiter/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Dashboard
+        </a>
+        <a routerLink="/recruiter/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          My Jobs
+        </a>
+        <a routerLink="/recruiter/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Applicants
+        </a>
+        <a routerLink="/recruiter/jobs/create" class="btn btn--primary btn--sm navbar__post-btn" (click)="closeMenu()">
+          + Post a Job
+        </a>
+      }
+
+      <!-- Admin Links -->
+      @if (auth.isAuthenticated() && auth.isAdmin()) {
+        <a routerLink="/admin/dashboard" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Dashboard
+        </a>
+        <a routerLink="/admin/jobs" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Jobs
+        </a>
+        <a routerLink="/admin/applications" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Applications
+        </a>
+        <a routerLink="/admin/candidates" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Candidates
+        </a>
+        <a routerLink="/admin/recruiters" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Recruiters
+        </a>
+        <a routerLink="/admin/users" routerLinkActive="navbar__link--active" class="navbar__link" (click)="closeMenu()">
+          Users
+        </a>
+      }
+
+      <!-- Authenticated Right Section (Notifications + User Dropdown) -->
+      @if (auth.isAuthenticated()) {
+        <div class="navbar__actions">
+          <!-- Notification Bell -->
+          <div class="notification-menu">
+            <button
+              class="notification-menu__bell"
+              type="button"
+              aria-label="Notifications"
+              aria-controls="notification-dropdown"
+              [attr.aria-expanded]="notificationsOpen()"
+              (click)="toggleNotifications($event)"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              @if (notificationsService.unreadCount() > 0) {
+                <span class="notification-menu__badge">
+                  {{ notificationsService.unreadCount() > 99 ? '99+' : notificationsService.unreadCount() }}
+                </span>
+              }
+            </button>
+
+            @if (notificationsOpen()) {
+              <div id="notification-dropdown" class="notification-menu__dropdown" role="dialog" aria-label="Recent notifications" (click)="$event.stopPropagation()">
+                <div class="notification-menu__header">
+                  <strong>Notifications</strong>
+                  <a routerLink="/notifications" (click)="closeMenu()">View all</a>
+                </div>
+                @if (recentNotifications().length === 0) {
+                  <p class="notification-menu__empty">No notifications yet.</p>
+                } @else {
+                  <div class="notification-menu__list">
+                    @for (notification of recentNotifications(); track notification.id) {
+                      <button
+                        type="button"
+                        class="notification-menu__item"
+                        [class.notification-menu__item--unread]="!notification.isRead"
+                        (click)="openNotification(notification)"
+                      >
+                        <span class="notification-menu__dot" [class.notification-menu__dot--unread]="!notification.isRead"></span>
+                        <div class="notification-menu__content">
+                          <strong class="notification-menu__item-title">{{ notification.title }}</strong>
+                          <span class="notification-menu__item-msg">{{ notification.message }}</span>
+                          <span class="notification-menu__item-time">{{ notification.createdAt | date:'shortTime' }}</span>
+                        </div>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- User Avatar Dropdown -->
+          <div class="user-menu">
+            <button
+              class="user-menu__trigger"
+              type="button"
+              aria-label="Open account menu"
+              aria-controls="account-dropdown"
+              [attr.aria-expanded]="userMenuOpen()"
+              (click)="toggleUserMenu($event)"
+            >
+              <span class="user-menu__avatar">{{ userInitials() }}</span>
+              <span class="user-menu__caret" aria-hidden="true">&#9662;</span>
+            </button>
+
+            @if (userMenuOpen()) {
+              <div id="account-dropdown" class="user-menu__dropdown" role="dialog" aria-label="Account menu" (click)="$event.stopPropagation()">
+                <div class="user-menu__header">
+                  <div class="user-menu__avatar-large">{{ userInitials() }}</div>
+                  <div class="user-menu__details">
+                    <span class="user-menu__email">{{ auth.userEmail() }}</span>
+                    <span class="badge badge--applied">{{ primaryRole() }}</span>
+                  </div>
+                </div>
+
+                <div class="user-menu__links">
+                  @if (auth.isCandidate()) {
+                    <a routerLink="/candidate/dashboard" class="user-menu__link" (click)="closeMenu()">
+                      Dashboard
+                    </a>
+                    <a routerLink="/candidate/profile" class="user-menu__link" (click)="closeMenu()">
+                      My Profile
+                    </a>
+                    <a routerLink="/candidate/cvs" class="user-menu__link" (click)="closeMenu()">
+                      My CVs
+                    </a>
+                    <a routerLink="/candidate/applications" class="user-menu__link" (click)="closeMenu()">
+                      Applications
+                    </a>
+                    <a routerLink="/candidate/job-alerts" class="user-menu__link" (click)="closeMenu()">
+                      Job Alerts
+                    </a>
+                  }
+
+                  @if (auth.isRecruiter()) {
+                    <a routerLink="/recruiter/dashboard" class="user-menu__link" (click)="closeMenu()">
+                      Dashboard
+                    </a>
+                    <a routerLink="/recruiter/company" class="user-menu__link" (click)="closeMenu()">
+                      Company Profile
+                    </a>
+                    <a routerLink="/recruiter/profile" class="user-menu__link" (click)="closeMenu()">
+                      Recruiter Profile
+                    </a>
+                    <a routerLink="/recruiter/jobs" class="user-menu__link" (click)="closeMenu()">
+                      My Jobs
+                    </a>
+                  }
+
+                  @if (auth.isAdmin()) {
+                    <a routerLink="/admin/dashboard" class="user-menu__link" (click)="closeMenu()">
+                      Admin Dashboard
+                    </a>
+                    <a routerLink="/admin/users" class="user-menu__link" (click)="closeMenu()">
+                      Users & Operations
+                    </a>
+                  }
+                </div>
+
+                <div class="user-menu__footer">
+                  <button type="button" class="user-menu__logout-btn" (click)="logout()">
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <!-- Public Guest CTAs -->
+        <div class="navbar__guest-actions">
+          <a routerLink="/login" class="btn btn--secondary btn--sm" (click)="closeMenu()">
+            Sign In
+          </a>
+          <a routerLink="/register" class="btn btn--primary btn--sm" (click)="closeMenu()">
+            Create Account
+          </a>
+        </div>
+      }
+    </nav>
   </div>
-</nav>
+</header>

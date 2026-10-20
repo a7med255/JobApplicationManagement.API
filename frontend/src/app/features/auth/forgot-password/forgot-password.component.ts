@@ -12,40 +12,48 @@ import { ApiErrorService } from '../../../core/services/api-error.service';
   imports: [ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-container">
-      <div class="auth-card">
-        <h1 class="auth-title">Forgot Password</h1>
-        <p class="auth-subtitle">Enter your email to receive a reset OTP</p>
+      <div class="card auth-card">
+        <div class="auth-header">
+          <div class="auth-logo" aria-hidden="true">?</div>
+          <h1 class="auth-title">Reset your password</h1>
+          <p class="auth-subtitle">Enter your account email and we’ll send a one-time code.</p>
+        </div>
 
         @if (successMessage()) {
-          <div class="alert alert-success">{{ successMessage() }}</div>
+          <div class="alert alert--success" role="status">{{ successMessage() }}</div>
         }
         @if (errorMessage()) {
-          <div class="alert alert-error">{{ errorMessage() }}</div>
+          <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div>
         }
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
           <div class="form-group">
-            <label for="email">Email Address</label>
+            <label for="email" class="form-label">Email address</label>
             <input
               id="email"
               type="email"
+              autocomplete="email"
               formControlName="email"
-              placeholder="john@example.com"
+              class="form-control"
+              placeholder="name@example.com"
               [attr.aria-invalid]="isFieldInvalid('email')"
             />
+            @if (isFieldInvalid('email')) {
+              <div class="form-error">Enter a valid email address.</div>
+            }
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading() || form.invalid">
+          <button type="submit" class="btn btn--primary btn--block btn--lg auth-submit" [disabled]="isLoading()" [attr.aria-busy]="isLoading()">
             @if (isLoading()) {
-              <span class="spinner"></span>
+              <span class="spinner"></span> Sending code...
             } @else {
-              Send Reset OTP
+              Send reset code
             }
           </button>
         </form>
 
-        <div class="auth-links">
-          <p>Remember your password? <a routerLink="/login">Log in</a></p>
+        <div class="auth-footer">
+          <p class="auth-footer-text">Remember your password? <a routerLink="/login" class="auth-link">Sign in</a></p>
         </div>
       </div>
     </div>
@@ -68,7 +76,10 @@ export class ForgotPasswordComponent {
   });
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -81,8 +92,8 @@ export class ForgotPasswordComponent {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.successMessage.set('OTP sent! Redirecting to reset page... (For testing: ' + res.otp + ')');
-          setTimeout(() => void this.router.navigate(['/reset-password'], { queryParams: { email } }), 3000);
+          this.successMessage.set(res?.message || 'Password reset instructions sent! Redirecting to reset page...');
+          setTimeout(() => void this.router.navigate(['/reset-password'], { queryParams: { email } }), 2000);
         },
         error: (error: HttpErrorResponse) => {
           this.errorMessage.set(this.apiError.getMessage(error, 'Request failed.'));

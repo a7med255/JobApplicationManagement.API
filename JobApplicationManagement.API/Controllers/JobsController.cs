@@ -71,6 +71,16 @@ public class JobsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:int}/similar")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSimilar(int id, [FromQuery] int limit = 4, CancellationToken cancellationToken = default) =>
+        Ok(await _mediator.Send(new GetSimilarJobsQuery(id, limit), cancellationToken));
+
+    [HttpGet("recommended")]
+    [Authorize(Roles = "Candidate")]
+    public async Task<IActionResult> GetRecommended([FromQuery] int limit = 6, CancellationToken cancellationToken = default) =>
+        Ok(await _mediator.Send(new GetRecommendedJobsQuery(limit), cancellationToken));
+
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Recruiter,Admin")]
     [ProducesResponseType(typeof(JobResponseDto), StatusCodes.Status200OK)]

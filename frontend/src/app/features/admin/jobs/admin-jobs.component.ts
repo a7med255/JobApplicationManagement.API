@@ -1,15 +1,17 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ChangeDetectionStrategy } from '@angular/core';
 import { finalize, Observable } from 'rxjs';
 import { JobStatus, JobSummary } from '../../../core/models/job.models';
 import { JobsService } from '../../../core/services/jobs.service';
 import { ApiErrorService } from '../../../core/services/api-error.service';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-admin-jobs',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, StatusBadgeComponent, PaginationComponent, EmptyStateComponent],
   templateUrl: './admin-jobs.component.html',
   styleUrl: './admin-jobs.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,23 +57,19 @@ export class AdminJobsComponent implements OnInit {
       });
   }
 
-  nextPage(): void {
-    if (this.pageNumber() < this.totalPages()) {
-      this.pageNumber.update((page) => page + 1);
-      this.loadJobs();
-    }
-  }
-
-  prevPage(): void {
-    if (this.pageNumber() > 1) {
-      this.pageNumber.update((page) => page - 1);
-      this.loadJobs();
-    }
+  onPageChange(page: number): void {
+    this.pageNumber.set(page);
+    this.loadJobs();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   requestDelete(id: number): void {
     this.confirmDeleteId.set(id);
     this.actionError.set(null);
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId.set(null);
   }
 
   deleteJob(id: number): void {

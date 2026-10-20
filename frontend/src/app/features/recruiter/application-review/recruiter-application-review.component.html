@@ -1,85 +1,339 @@
-<div class="container review-container">
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading application details...</div>
-    </div>
-  } @else if (errorMessage() || !application()) {
-    <div class="error-state">
-      <div class="error-state__icon">⚠️</div>
-      <h3 class="error-state__title">{{ errorMessage() || 'Application not found.' }}</h3>
-      <a [routerLink]="backRoute()" class="btn btn--secondary">Back to Applications</a>
-    </div>
-  } @else {
-    <div class="page-header">
-      <a [routerLink]="backRoute()" class="back-link">&larr; Back to Applications</a>
-    </div>
+<div class="review-workspace-page">
+  <div class="container">
+    <!-- Top Bar -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <a [routerLink]="backRoute()" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Applications
+      </a>
+    </nav>
 
-    <div class="card review-card">
-      <div class="review-header">
-        <div>
-          <h1 class="app-title">Application #{{ application()!.id }}</h1>
-          <p class="app-subtitle">{{ application()!.candidateName || ('Candidate #' + application()!.candidateId) }} applied for <a [routerLink]="['/jobs', application()!.jobId]">{{ application()!.jobTitle || ('Job #' + application()!.jobId) }}</a></p>
-          @if (application()!.submittedCvId) {
-            <button class="btn btn--secondary btn--sm mt-2" type="button" (click)="downloadSubmittedCv()" [disabled]="isDownloadingCv()">
-              {{ isDownloadingCv() ? 'Downloading...' : 'Open ' + (application()!.submittedCvDisplayName || 'submitted CV') }}
-            </button>
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading applicant review workspace...</p>
+      </div>
+    } @else if (errorMessage() || !application()) {
+      <div class="card error-card">
+        <div class="error-icon">⚠️</div>
+        <h3>Applicant Record Not Found</h3>
+        <p>{{ errorMessage() || 'The requested application could not be located.' }}</p>
+        <a [routerLink]="backRoute()" class="btn btn--secondary">Back to Applications</a>
+      </div>
+    } @else {
+      <!-- Workspace Header -->
+      <section class="card candidate-header-card mb-4">
+        <div class="header-main">
+          <div class="candidate-avatar-lg">
+            {{ (application()!.candidateName || 'C')[0] }}
+          </div>
+          <div class="header-titles">
+            <div class="header-meta-row">
+              <span class="app-id-badge">Application #{{ application()!.id }}</span>
+              <app-status-badge [status]="application()!.jobApplicationStatus" type="application" />
+            </div>
+            <h1 class="candidate-name">{{ application()!.candidateName || ('Candidate #' + application()!.candidateId) }}</h1>
+            <p class="job-applied-info">
+              Applied for
+              <a [routerLink]="['/jobs', application()!.jobId]" target="_blank" class="job-link">
+                {{ application()!.jobTitle || ('Job #' + application()!.jobId) }}
+              </a>
+              <span class="meta-dot">&bull;</span>
+              <span>Submitted {{ application()?.appliedAt | date:'mediumDate' }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <a [routerLink]="['/jobs', application()!.jobId]" target="_blank" class="btn btn--outline btn--sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span>View Job Post</span>
+          </a>
+        </div>
+      </section>
+
+      @if (updateSuccess()) {
+        <div class="alert alert--success mb-4" role="status">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Application status has been updated successfully.</span>
+        </div>
+      }
+
+      @if (updateError()) {
+        <div class="alert alert--danger mb-4" role="alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ updateError() }}</span>
+        </div>
+      }
+
+      <!-- 2-Column Review Workspace Grid -->
+      <div class="review-grid">
+        <!-- Left Column: Candidate Materials & Timeline -->
+        <main class="review-materials">
+          <!-- Resume Card -->
+          <section class="card section-card">
+            <div class="section-header">
+              <h2 class="section-title">Submitted Resume</h2>
+            </div>
+            @if (application()!.submittedCvId) {
+              <div class="resume-attachment-card">
+                <div class="pdf-icon">PDF</div>
+                <div class="resume-info">
+                  <strong class="resume-title">{{ application()!.submittedCvDisplayName || 'Resume' }}</strong>
+                  <span class="resume-sub">{{ application()!.submittedCvFileName || 'Document.pdf' }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn--primary btn--sm"
+                  (click)="downloadSubmittedCv()"
+                  [disabled]="isDownloadingCv()"
+                >
+                  @if (isDownloadingCv()) {
+                    <span class="spinner"></span>
+                    <span>Opening...</span>
+                  } @else {
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>View / Download CV</span>
+                  }
+                </button>
+              </div>
+            } @else {
+              <p class="text-muted">No resume file was attached to this application.</p>
+            }
+          </section>
+
+          <!-- Cover Letter Card (if available) -->
+          @if (application()!.coverLetter) {
+            <section class="card section-card">
+              <div class="section-header">
+                <h2 class="section-title">Cover Letter</h2>
+              </div>
+              <div class="cover-letter-box">
+                <p class="preserve-lines">{{ application()!.coverLetter }}</p>
+              </div>
+            </section>
           }
-        </div>
-        <app-application-status-badge [status]="application()!.jobApplicationStatus" />
-      </div>
 
-      <div class="app-timeline">
-        <div class="timeline-item">
-          <div class="timeline-label">Applied On</div>
-          <div class="timeline-value">{{ application()?.appliedAt | date:'fullDate' }}</div>
-        </div>
-        @if (application()?.statusUpdatedAt && application()!.statusUpdatedAt !== application()!.appliedAt) {
-          <div class="timeline-item">
-            <div class="timeline-label">Last Updated</div>
-            <div class="timeline-value">{{ application()?.statusUpdatedAt | date:'fullDate' }}</div>
+          <!-- Status History Audit Trail -->
+          @if (application()!.statusHistory.length > 0) {
+            <section class="card section-card">
+              <div class="section-header">
+                <h2 class="section-title">Stage History & Review Notes</h2>
+              </div>
+              <ol class="timeline-list">
+                @for (entry of application()!.statusHistory; track entry.id) {
+                  <li class="timeline-node">
+                    <div class="node-marker"></div>
+                    <div class="node-body">
+                      <div class="node-title-row">
+                        <strong class="node-stage">{{ statusOptions[entry.newStatus]?.label || 'Stage Updated' }}</strong>
+                        <span class="node-time">{{ entry.changedAt | date:'medium' }}</span>
+                      </div>
+                      @if (entry.note) {
+                        <p class="node-note">{{ entry.note }}</p>
+                      }
+                    </div>
+                  </li>
+                }
+              </ol>
+            </section>
+          }
+        </main>
+
+        <!-- Right Column: Decision & Interview Sidebar -->
+        <aside class="review-sidebar">
+          <!-- Status Update Card -->
+          <div class="card panel-card">
+            <h3 class="panel-title">Update Application Status</h3>
+            <p class="panel-subtitle">Change candidate's stage in the hiring pipeline.</p>
+
+            @if (application()!.jobApplicationStatus === applicationStatus.Cancelled) {
+              <div class="alert alert--danger">
+                This application was cancelled / withdrawn by the candidate and cannot be updated.
+              </div>
+            } @else {
+              <div class="status-controls">
+                <div class="form-group">
+                  <label class="form-label" for="application-status">Hiring Stage</label>
+                  <select
+                    id="application-status"
+                    class="form-control"
+                    [formControl]="statusControl"
+                  >
+                    @for (opt of statusOptions; track opt.value) {
+                      <option [ngValue]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="status-note">Internal Review Note (Optional)</label>
+                  <textarea
+                    id="status-note"
+                    class="form-control"
+                    [formControl]="statusNoteControl"
+                    rows="3"
+                    placeholder="Feedback for hiring team (e.g. Strong backend skills, proceed to interview)"
+                    maxlength="1000"
+                  ></textarea>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn--primary w-full"
+                  (click)="updateStatus()"
+                  [disabled]="isUpdating() || statusControl.value === application()!.jobApplicationStatus"
+                  [attr.aria-busy]="isUpdating()"
+                >
+                  @if (isUpdating()) {
+                    <span class="spinner"></span>
+                    <span>Updating Stage...</span>
+                  } @else {
+                    <span>Save Status Change</span>
+                  }
+                </button>
+              </div>
+            }
           </div>
-        }
-      </div>
 
-      <div class="status-update-section">
-        <h3>Update Application Status</h3>
-        
-        <div class="status-form">
-          <div class="form-group mb-0">
-            <label class="form-label" for="application-status">New status</label>
-            <select
-              id="application-status"
-              class="form-control"
-              [formControl]="statusControl"
-            >
-              @for (opt of statusOptions; track opt.value) {
-                <option [ngValue]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
+          <!-- Interview Management Card -->
+          <div class="card panel-card" id="interviews-panel">
+            <h3 class="panel-title">Interviews</h3>
+            <p class="panel-subtitle">Manage video, on-site, or phone interview rounds.</p>
+
+            @if (interviews().length > 0) {
+              <div class="scheduled-interviews-list mb-3">
+                @for (interview of interviews(); track interview.id) {
+                  <div class="interview-card" [class.cancelled]="interview.status === interviewStatus.Cancelled">
+                    <div class="interview-card__header">
+                      <strong class="int-time">{{ interview.scheduledAt | date:'medium' }}</strong>
+                      <span class="int-type-tag">
+                        {{ interviewTypes[interview.interviewType].label }} &bull; {{ interview.durationMinutes }}m
+                      </span>
+                    </div>
+
+                    @if (interview.meetingLink && interview.status !== interviewStatus.Cancelled) {
+                      <a [href]="interview.meetingLink" target="_blank" rel="noopener noreferrer" class="meeting-link-btn">
+                        Join Video Meeting &nearr;
+                      </a>
+                    }
+                    @if (interview.location) {
+                      <p class="int-info"><strong>Location:</strong> {{ interview.location }}</p>
+                    }
+                    @if (interview.notes) {
+                      <p class="int-info"><strong>Notes:</strong> {{ interview.notes }}</p>
+                    }
+
+                    <div class="interview-card__actions">
+                      @if (interview.status !== interviewStatus.Cancelled) {
+                        <button class="btn btn--outline btn--sm" type="button" (click)="editInterview(interview)">
+                          Reschedule
+                        </button>
+                        <button class="btn btn--danger-subtle btn--sm" type="button" (click)="requestInterviewCancellation(interview.id)" [disabled]="interviewBusy()">
+                          Cancel
+                        </button>
+                      } @else {
+                        <span class="cancelled-tag">Cancelled</span>
+                      }
+                    </div>
+                    @if (cancellingInterviewId() === interview.id) {
+                      <div class="interview-cancel-confirm" role="alertdialog" aria-label="Confirm interview cancellation">
+                        <p>Cancel this interview? The candidate will receive an update.</p>
+                        <div>
+                          <button class="btn btn--outline btn--sm" type="button" (click)="dismissInterviewCancellation()" [disabled]="interviewBusy()">Keep interview</button>
+                          <button class="btn btn--danger btn--sm" type="button" (click)="confirmInterviewCancellation(interview)" [disabled]="interviewBusy()">{{ interviewBusy() ? 'Cancelling...' : 'Confirm cancellation' }}</button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Schedule Form -->
+            @if (application()!.jobApplicationStatus === applicationStatus.UnderReview || application()!.jobApplicationStatus === applicationStatus.Shortlisted || application()!.jobApplicationStatus === applicationStatus.Interview || editingInterviewId()) {
+              <form [formGroup]="interviewForm" (ngSubmit)="saveInterview()" class="interview-schedule-form">
+                <h4 class="form-section-title">
+                  {{ editingInterviewId() ? 'Reschedule Interview' : 'Schedule New Round' }}
+                </h4>
+
+                <div class="form-group">
+                  <label class="form-label" for="scheduled-at">Date & Time</label>
+                  <input id="scheduled-at" class="form-control" type="datetime-local" formControlName="scheduledAt" />
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label class="form-label" for="duration">Duration (mins)</label>
+                    <input id="duration" class="form-control" type="number" formControlName="durationMinutes" min="15" max="480" />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="interview-type">Format</label>
+                    <select id="interview-type" class="form-control" formControlName="interviewType">
+                      @for (type of interviewTypes; track type.value) {
+                        <option [ngValue]="type.value">{{ type.label }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="meeting-link">Meeting Link (Zoom / Teams / Google Meet)</label>
+                  <input id="meeting-link" class="form-control" type="url" formControlName="meetingLink" placeholder="https://meet.google.com/..." />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="location">Location (for On-site interviews)</label>
+                  <input id="location" class="form-control" formControlName="location" placeholder="e.g. 4th Floor, Room 402" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="interview-notes">Instructions for Candidate</label>
+                  <textarea id="interview-notes" class="form-control" formControlName="notes" rows="2" placeholder="Topics to cover, technical requirements..."></textarea>
+                </div>
+
+                <div class="interview-btn-row">
+                  @if (editingInterviewId()) {
+                    <button class="btn btn--outline btn--sm" type="button" (click)="cancelInterviewEdit()">
+                      Cancel
+                    </button>
+                  }
+                  <button class="btn btn--primary btn--sm flex-1" type="submit" [disabled]="interviewBusy() || interviewForm.invalid">
+                    @if (interviewBusy()) {
+                      <span class="spinner"></span>
+                      <span>Saving...</span>
+                    } @else {
+                      <span>{{ editingInterviewId() ? 'Save New Schedule' : 'Confirm & Schedule' }}</span>
+                    }
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <p class="text-muted text-sm">
+                Move candidate to <strong>Under Review</strong>, <strong>Shortlisted</strong>, or <strong>Interview</strong> stage above to enable interview scheduling.
+              </p>
+            }
           </div>
-          <button 
-            class="btn btn--primary" 
-            (click)="updateStatus()"
-            [disabled]="isUpdating() || statusControl.value === application()!.jobApplicationStatus || application()!.jobApplicationStatus === applicationStatus.Cancelled"
-            [attr.aria-busy]="isUpdating()"
-          >
-            {{ isUpdating() ? 'Updating...' : 'Update Status' }}
-          </button>
-        </div>
-        
-        @if (updateSuccess()) {
-          <div class="alert alert--success mt-2" role="status">Application status updated.</div>
-        }
-
-        @if (updateError()) {
-          <div class="alert alert--danger mt-2" role="alert">{{ updateError() }}</div>
-        }
-
-        @if (application()!.jobApplicationStatus === applicationStatus.Cancelled) {
-          <p class="mt-2 text-danger">This application was cancelled by the candidate and cannot be updated.</p>
-        }
+        </aside>
       </div>
-    </div>
-  }
+    }
+  </div>
 </div>

@@ -9,5 +9,6 @@ public class UpdateJobApplicationValidator : AbstractValidator<UpdateJobApplicat
     {
         RuleFor(x => x.JobApplicationStatus)
             .IsInEnum().WithMessage("A valid JobApplicationStatus is required.");
+        RuleFor(x => x.Note).MaximumLength(2000);
     }
 }

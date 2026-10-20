@@ -1,5 +1,27 @@
 namespace JobApplicationManagement.Application.Common.Interfaces;
 
+public enum CredentialsValidationStatus
+{
+    Success,
+    InvalidCredentials,
+    EmailNotConfirmed,
+    LockedOut
+}
+
+public record CredentialsValidationResult(
+    CredentialsValidationStatus Status,
+    string UserId,
+    string Email,
+    IEnumerable<string> Roles);
+
+public record IdentityUserInfo(
+    string UserId,
+    string Email,
+    string FullName,
+    bool EmailConfirmed,
+    bool IsLocked,
+    IEnumerable<string> Roles);
+
 /// <summary>
 /// Abstraction for Identity user management operations.
 /// Lives in Application so the service layer does not depend on
@@ -12,7 +34,12 @@ public interface IIdentityService
 
     Task<bool> AddToRoleAsync(string userId, string role);
 
-    Task<(bool Succeeded, string UserId, string Email, IEnumerable<string> Roles)> ValidateCredentialsAsync(
+    Task DeleteUserAsync(string userId);
+    Task<IReadOnlyCollection<IdentityUserInfo>> GetUsersAsync(int skip, int take);
+    Task SetUserLockoutAsync(string userId, bool locked);
+    Task UpdateUserRolesAsync(string userId, IReadOnlyCollection<string> roles);
+
+    Task<CredentialsValidationResult> ValidateCredentialsAsync(
         string email, string password);
 
     Task<(string UserId, string Email, IEnumerable<string> Roles)?> GetUserByIdAsync(string userId);

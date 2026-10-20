@@ -39,6 +39,12 @@ export class CandidatesService {
     return this.http.put<CandidateResponse>(`${this.apiUrl}/${id}`, request);
   }
 
+  uploadProfileImage(file: File): Observable<CandidateResponse> {
+    const data = new FormData();
+    data.append('file', file, file.name);
+    return this.http.post<CandidateResponse>(`${this.apiUrl}/mine/profile-image`, data);
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

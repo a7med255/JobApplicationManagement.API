@@ -1,99 +1,160 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
-      <h1 class="page-header__title mt-3">Manage All Jobs</h1>
-      <p class="page-header__subtitle">{{ totalCount() }} job{{ totalCount() === 1 ? '' : 's' }}</p>
-    </div>
-  </div>
-
-  @if (actionError()) {
-    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
-  }
-
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading jobs...</div>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="error-state">
-      <h2 class="error-state__title">{{ errorMessage() }}</h2>
-      <button class="btn btn--secondary" type="button" (click)="loadJobs()">Retry</button>
-    </div>
-  } @else if (jobs().length === 0) {
-    <div class="empty-state">
-      <h2 class="empty-state__title">No jobs found</h2>
-      <p class="empty-state__message">There are no job postings in the system.</p>
-    </div>
-  } @else {
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Job ID</th>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (job of jobs(); track job.id) {
-            <tr>
-              <td>#{{ job.id }}</td>
-              <td><strong>{{ job.title }}</strong></td>
-              <td>
-                <span class="badge" [class.badge--active]="job.isActive" [class.badge--closed]="!job.isActive">
-                  {{ job.isActive ? 'Active' : 'Closed' }}
-                </span>
-              </td>
-              <td>
-                <div class="action-buttons">
-                  <a [routerLink]="['/jobs', job.id]" class="btn btn--secondary btn--sm">View</a>
-                  <a [routerLink]="['/admin/jobs', job.id, 'edit']" class="btn btn--secondary btn--sm">Edit</a>
-                  @if (job.status === JobStatus.Published || job.status === JobStatus.Draft || job.status === JobStatus.Closed || job.status === JobStatus.Expired) {
-                  <button
-                    class="btn btn--secondary btn--sm"
-                    type="button"
-                    [disabled]="pendingId() === job.id"
-                    (click)="setJobActive(job, !job.isActive)"
-                  >
-                    {{ pendingId() === job.id ? 'Updating...' : (job.isActive ? 'Close' : (job.status === JobStatus.Draft ? 'Publish' : 'Reopen')) }}
-                  </button>
-                  }
-
-                  @if (job.status === JobStatus.Draft && confirmDeleteId() === job.id) {
-                    <span class="confirmation-text">Delete permanently?</span>
-                    <button
-                      class="btn btn--danger btn--sm"
-                      type="button"
-                      [disabled]="pendingId() === job.id"
-                      (click)="deleteJob(job.id)"
-                    >
-                      {{ pendingId() === job.id ? 'Deleting...' : 'Confirm' }}
-                    </button>
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
-                  } @else if (job.status === JobStatus.Draft) {
-                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(job.id)">Delete</button>
-                  }
-                </div>
-              </td>
-            </tr>
+<div class="admin-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/admin/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">
+          All Platform Jobs
+          @if (!isLoading() && totalCount() > 0) {
+            <span class="count-badge">{{ totalCount() }}</span>
           }
-        </tbody>
-      </table>
+        </h1>
+        <p class="page-subtitle">Inspect, moderate, reopen, close, or delete job postings across Careerly.</p>
+      </div>
+
     </div>
 
-    @if (totalPages() > 1) {
-      <nav class="pagination" aria-label="Job pages">
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="prevPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
-          Next
-        </button>
-      </nav>
+    @if (actionError()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ actionError() }}</span>
+      </div>
     }
-  }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading jobs directory...</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="loadJobs()">Retry</button>
+      </div>
+    } @else if (jobs().length === 0) {
+      <app-empty-state
+        icon=""
+        title="No jobs found"
+        message="There are no job postings currently registered in the database."
+      />
+    } @else {
+      <div class="table-card card">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Job Requisition</th>
+                <th>Company</th>
+                <th>Category & Location</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (job of jobs(); track job.id) {
+                <tr>
+                  <td>
+                    <div class="job-id-cell">
+                      <span class="id-tag">#{{ job.id }}</span>
+                      <strong class="job-title-link">
+                        <a [routerLink]="['/jobs', job.id]" target="_blank">
+                          {{ job.title }}
+                        </a>
+                      </strong>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="company-name">{{ job.company.name || 'Company #' + job.company.id }}</span>
+                  </td>
+                  <td>
+                    <span class="category-meta">{{ job.category }} &bull; {{ job.city ? job.city + ', ' : '' }}{{ job.country }}</span>
+                  </td>
+                  <td>
+                    <app-status-badge [status]="job.status" type="job" />
+                  </td>
+                  <td class="text-right">
+                    <div class="actions-group">
+                      <a [routerLink]="['/jobs', job.id]" target="_blank" class="btn btn--outline btn--sm" title="Preview">
+                        View
+                      </a>
+                      <a [routerLink]="['/admin/jobs', job.id, 'edit']" class="btn btn--outline btn--sm" title="Edit">
+                        Edit
+                      </a>
+
+                      @if (job.status === JobStatus.Published || job.status === JobStatus.Draft || job.status === JobStatus.Closed || job.status === JobStatus.Expired) {
+                        <button
+                          class="btn btn--outline btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="setJobActive(job, !job.isActive)"
+                        >
+                          {{ job.isActive ? 'Close' : 'Reopen' }}
+                        </button>
+                      }
+
+                      @if (confirmDeleteId() === job.id) {
+                        <span class="inline-confirm">
+                          <span>Confirm delete?</span>
+                          <button
+                            class="btn btn--danger btn--sm"
+                            type="button"
+                            [disabled]="pendingId() === job.id"
+                            (click)="deleteJob(job.id)"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            class="btn btn--outline btn--sm"
+                            type="button"
+                            (click)="cancelDelete()"
+                          >
+                            No
+                          </button>
+                        </span>
+                      } @else {
+                        <button
+                          class="btn btn--danger-subtle btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="requestDelete(job.id)"
+                        >
+                          Delete
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
 </div>

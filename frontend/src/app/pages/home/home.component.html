@@ -1,39 +1,202 @@
-<section class="hero">
-  <div class="hero__content">
-    <h1 class="hero__title">
-      Find Your Next
-      <span class="hero__gradient">Career Opportunity</span>
-    </h1>
-    <p class="hero__subtitle">
-      Connect with top employers. Discover roles that match your skills and ambitions.
-      Your dream job is just a click away.
-    </p>
-    <div class="hero__actions">
-      @if (auth.isAuthenticated()) {
-        <a routerLink="/jobs" class="btn btn--primary btn--lg">Browse Jobs</a>
-        <a [routerLink]="auth.getDefaultRoute()" class="btn btn--secondary btn--lg">Go to Dashboard</a>
-      } @else {
-        <a routerLink="/register" class="btn btn--primary btn--lg">Get Started</a>
-        <a routerLink="/login" class="btn btn--secondary btn--lg">Sign In</a>
+<!-- Recruitment Hero Section -->
+<section class="hero-section" aria-labelledby="hero-title">
+  <div class="hero-section__container">
+    <div class="hero-section__content">
+      <span class="hero-section__badge">
+        <span class="hero-section__badge-dot"></span>
+        Careerly job search
+      </span>
+
+      <h1 id="hero-title" class="hero-section__title">
+        Find the right job for you
+      </h1>
+
+      <p class="hero-section__subtitle">
+        Search current opportunities and connect with employers looking for your skills and experience.
+      </p>
+
+      <!-- Recruitment Search Bar Pill -->
+      <form class="search-bar" [formGroup]="searchForm" (ngSubmit)="search()" role="search">
+        <div class="search-bar__field search-bar__field--keyword">
+          <span class="search-bar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <label for="home-keyword-input" class="sr-only">Job title, skill, or keyword</label>
+          <input
+            id="home-keyword-input"
+            type="text"
+            class="search-bar__input"
+            formControlName="search"
+            placeholder="Job title, skill, or keyword"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="search-bar__divider" aria-hidden="true"></div>
+
+        <div class="search-bar__field search-bar__field--location">
+          <span class="search-bar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </span>
+          <label for="home-city-input" class="sr-only">City or location</label>
+          <input
+            id="home-city-input"
+            type="text"
+            class="search-bar__input"
+            formControlName="city"
+            placeholder="City or location"
+            autocomplete="off"
+          />
+        </div>
+
+        <button type="submit" class="btn btn--primary search-bar__submit">
+          Search Jobs
+        </button>
+      </form>
+
+      <!-- Popular Searches -->
+      @if (popularSearches().length > 0) {
+      <div class="popular-searches">
+        <span class="popular-searches__label">Explore skills:</span>
+        <div class="popular-searches__chips">
+          @for (tag of popularSearches(); track tag) {
+            <button
+              type="button"
+              class="popular-searches__chip"
+              (click)="applyPopularSearch(tag)"
+            >
+              {{ tag }}
+            </button>
+          }
+        </div>
+      </div>
       }
     </div>
   </div>
-
-  <div class="features">
-    <div class="feature-card">
-      <div class="feature-card__icon">🔍</div>
-      <h3 class="feature-card__title">Browse Jobs</h3>
-      <p class="feature-card__desc">Explore curated job listings from top recruiters and companies.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card__icon">📋</div>
-      <h3 class="feature-card__title">Apply Instantly</h3>
-      <p class="feature-card__desc">One-click applications. Track your status in real time.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card__icon">👥</div>
-      <h3 class="feature-card__title">Recruit Talent</h3>
-      <p class="feature-card__desc">Post jobs, review candidates, and manage your hiring pipeline.</p>
-    </div>
-  </div>
 </section>
+
+<!-- Content Container -->
+<div class="container home-content">
+  <!-- Recent Opportunities Section -->
+  <section class="section" aria-labelledby="recent-jobs-heading">
+    <div class="section__header">
+      <div>
+        <h2 id="recent-jobs-heading" class="section__title">Recent Opportunities</h2>
+        <p class="section__subtitle">Fresh roles published by employers on Careerly.</p>
+      </div>
+      <a routerLink="/jobs" class="section__action-link">
+        Explore all jobs &rarr;
+      </a>
+    </div>
+
+    @if (isLoadingJobs()) {
+      <div class="loading">
+        <div class="loading__spinner"></div>
+        <div class="loading__text">Loading latest opportunities...</div>
+      </div>
+    } @else if (recentJobs().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state__icon">💼</div>
+        <h3 class="empty-state__title">No job postings available</h3>
+        <p class="empty-state__message">Check back soon for newly published career opportunities.</p>
+      </div>
+    } @else {
+      <div class="job-grid">
+        @for (job of recentJobs(); track job.id) {
+          <app-job-card [job]="job" />
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Browse by Category Section -->
+  @if (categories().length > 0) {
+  <section class="section" aria-labelledby="categories-heading">
+    <div class="section__header">
+      <div>
+        <h2 id="categories-heading" class="section__title">Browse by Category</h2>
+        <p class="section__subtitle">Explore specialized career opportunities aligned with your expertise.</p>
+      </div>
+    </div>
+
+    <div class="category-grid">
+      @for (category of categories(); track category) {
+        <button
+          type="button"
+          class="category-card"
+          (click)="browseCategory(category)"
+        >
+          <span class="category-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"></rect><path d="M8 6V4h8v2M3 11h18"></path></svg>
+          </span>
+          <div class="category-card__text">
+            <strong class="category-card__title">{{ category }}</strong>
+            <span class="category-card__action">Browse roles &rarr;</span>
+          </div>
+        </button>
+      }
+    </div>
+  </section>
+  }
+
+  <!-- How Careerly Works Section -->
+  <section class="section how-it-works" aria-labelledby="how-heading">
+    <div class="section__header section__header--center">
+      <h2 id="how-heading" class="section__title">How Careerly Works</h2>
+      <p class="section__subtitle">A clear path from job discovery to interview.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-card__number">1</div>
+        <h3 class="step-card__title">Build Your Profile & CV</h3>
+        <p class="step-card__desc">
+          Complete your profile, upload PDF resumes, and choose the CV you want to use.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card__number">2</div>
+        <h3 class="step-card__title">One-Click Applications</h3>
+        <p class="step-card__desc">
+          Filter roles by location, workplace type, and experience, then apply with your selected resume.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card__number">3</div>
+        <h3 class="step-card__title">Track & Interview</h3>
+        <p class="step-card__desc">
+          Follow application updates, receive notifications, and review scheduled interview details.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Employers Conversion Banner -->
+  <section class="employer-banner" aria-labelledby="employer-banner-title">
+    <div class="employer-banner__content">
+      <span class="employer-banner__tag">Recruiting Solutions</span>
+      <h2 id="employer-banner-title" class="employer-banner__title">
+        Looking to hire qualified talent?
+      </h2>
+      <p class="employer-banner__desc">
+        Post job opportunities, review applications in a dedicated workspace, schedule interviews, and build your team faster.
+      </p>
+      <div class="employer-banner__actions">
+        <a routerLink="/register" [queryParams]="{ role: 'Recruiter' }" class="btn btn--primary btn--lg">
+          Post a Job on Careerly
+        </a>
+        <a routerLink="/login" class="btn btn--secondary btn--lg">
+          Recruiter Sign In
+        </a>
+      </div>
+    </div>
+  </section>
+</div>

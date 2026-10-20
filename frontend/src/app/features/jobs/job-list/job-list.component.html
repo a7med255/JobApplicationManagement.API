@@ -1,122 +1,334 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">Explore Jobs</h1>
-      <p class="page-header__subtitle">
-        Browse {{ totalCount() }} job {{ totalCount() === 1 ? 'posting' : 'postings' }}.
-      </p>
+<div class="search-page">
+  <!-- Top Search Bar Container -->
+  <div class="search-page__topbar">
+    <div class="container">
+      <form class="top-search-bar" [formGroup]="searchForm" (ngSubmit)="submitSearch()" role="search">
+        <div class="top-search-bar__field">
+          <span class="top-search-bar__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <label for="search-keyword" class="sr-only">Job title, skill or keyword</label>
+          <input
+            id="search-keyword"
+            type="text"
+            class="top-search-bar__input"
+            formControlName="search"
+            placeholder="Job title, skill, or keyword"
+          />
+        </div>
+
+        <div class="top-search-bar__divider" aria-hidden="true"></div>
+
+        <div class="top-search-bar__field">
+          <span class="top-search-bar__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </span>
+          <label for="search-city" class="sr-only">City or location</label>
+          <input
+            id="search-city"
+            type="text"
+            class="top-search-bar__input"
+            formControlName="city"
+            placeholder="City or location"
+          />
+        </div>
+
+        <button type="submit" class="btn btn--primary top-search-bar__submit">
+          Find Jobs
+        </button>
+      </form>
     </div>
   </div>
 
-  <form class="card search-panel" [formGroup]="searchForm" (ngSubmit)="search()">
-    <div class="search-panel__grid">
-      <div class="form-group">
-        <label class="form-label" for="job-search">Keyword</label>
-        <input id="job-search" class="form-control" formControlName="search" placeholder="Title, company or skill">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="job-city">City</label>
-        <input id="job-city" class="form-control" formControlName="city" placeholder="e.g. Cairo">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="job-skill">Skill</label>
-        <input id="job-skill" class="form-control" formControlName="skill" placeholder="e.g. Angular">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="workplace">Workplace</label>
-        <select id="workplace" class="form-control" formControlName="workplaceType">
-          <option [ngValue]="null">Any</option>
-          <option [ngValue]="WorkplaceType.OnSite">On-site</option>
-          <option [ngValue]="WorkplaceType.Remote">Remote</option>
-          <option [ngValue]="WorkplaceType.Hybrid">Hybrid</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="employment">Employment</label>
-        <select id="employment" class="form-control" formControlName="employmentType">
-          <option [ngValue]="null">Any</option>
-          <option [ngValue]="EmploymentType.FullTime">Full-time</option>
-          <option [ngValue]="EmploymentType.PartTime">Part-time</option>
-          <option [ngValue]="EmploymentType.Contract">Contract</option>
-          <option [ngValue]="EmploymentType.Internship">Internship</option>
-          <option [ngValue]="EmploymentType.Freelance">Freelance</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="experience">Experience</label>
-        <select id="experience" class="form-control" formControlName="experienceLevel">
-          <option [ngValue]="null">Any</option>
-          <option [ngValue]="ExperienceLevel.EntryLevel">Entry level</option>
-          <option [ngValue]="ExperienceLevel.Junior">Junior</option>
-          <option [ngValue]="ExperienceLevel.MidLevel">Mid level</option>
-          <option [ngValue]="ExperienceLevel.Senior">Senior</option>
-          <option [ngValue]="ExperienceLevel.Lead">Lead</option>
-          <option [ngValue]="ExperienceLevel.Manager">Manager</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="sort">Sort</label>
-        <select id="sort" class="form-control" formControlName="sort">
-          <option [ngValue]="JobSortOrder.Newest">Newest</option>
-          <option [ngValue]="JobSortOrder.Oldest">Oldest</option>
-          <option [ngValue]="JobSortOrder.SalaryLowToHigh">Salary: low to high</option>
-          <option [ngValue]="JobSortOrder.SalaryHighToLow">Salary: high to low</option>
-        </select>
-      </div>
-    </div>
-    <div class="search-panel__actions">
-      <button class="btn btn--primary" type="submit">Search jobs</button>
-      <button class="btn btn--secondary" type="button" (click)="clearFilters()">Clear</button>
-    </div>
-  </form>
+  <!-- Main Search Container: Sidebar + Results List -->
+  <div class="container search-page__main">
+    <!-- Mobile Filter Action Bar -->
+    <div class="mobile-filter-bar">
+      <button
+        type="button"
+        class="btn btn--secondary btn--sm mobile-filter-bar__btn"
+        (click)="toggleMobileFilters()"
+        [attr.aria-expanded]="mobileFiltersOpen()"
+        aria-controls="job-filter-sidebar"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        Filters
+        @if (activeFilterCount() > 0) {
+          <span class="mobile-filter-bar__count">({{ activeFilterCount() }})</span>
+        }
+      </button>
 
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading jobs...</div>
+      <span class="mobile-filter-bar__total">
+        <strong>{{ totalCount() }}</strong> jobs
+      </span>
     </div>
-  } @else if (isError()) {
-    <div class="error-state">
-      <div class="error-state__icon">⚠️</div>
-      <h3 class="error-state__title">Failed to load jobs</h3>
-      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
-      <button class="btn btn--secondary" (click)="loadJobs()">Retry</button>
-    </div>
-  } @else if (jobs().length === 0) {
-    <div class="empty-state">
-      <div class="empty-state__icon">🔍</div>
-      <h3 class="empty-state__title">No jobs found</h3>
-      <p class="empty-state__message">There are currently no job postings to display.</p>
-    </div>
-  } @else {
-    <div class="job-grid">
-      @for (job of jobs(); track job.id) {
-        <app-job-card 
-          [job]="job" 
-          [showApply]="authService.isCandidate()"
-          (apply)="onApply($event)">
-        </app-job-card>
+
+    <div class="search-layout">
+      <!-- Filter Sidebar (Desktop & Mobile Drawer) -->
+      <aside
+        id="job-filter-sidebar"
+        class="filter-sidebar"
+        [class.filter-sidebar--open]="mobileFiltersOpen()"
+        role="region"
+        aria-label="Filter jobs"
+      >
+        <div class="filter-sidebar__header">
+          <h2 class="filter-sidebar__title">Filter Jobs</h2>
+          @if (activeFilterCount() > 0) {
+            <button
+              type="button"
+              class="filter-sidebar__clear-btn"
+              (click)="clearFilters()"
+            >
+              Clear All
+            </button>
+          }
+          <button
+            type="button"
+            class="filter-sidebar__close-btn"
+            (click)="closeMobileFilters()"
+            aria-label="Close filters"
+          >
+            &times;
+          </button>
+        </div>
+
+        <form [formGroup]="searchForm" class="filter-sidebar__body">
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-country">Country</label>
+            <input id="filter-country" class="form-control" type="text" formControlName="country" placeholder="e.g. Egypt" />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-category">Category</label>
+            <input id="filter-category" class="form-control" type="text" formControlName="category" placeholder="e.g. Engineering" />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-skill">Skill</label>
+            <input id="filter-skill" class="form-control" type="text" formControlName="skill" placeholder="e.g. Angular" />
+          </div>
+
+          <!-- Workplace Type -->
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-workplace">Workplace Type</label>
+            <select
+              id="filter-workplace"
+              class="form-control"
+              formControlName="workplaceType"
+              (change)="onFilterSelect()"
+            >
+              <option [ngValue]="null">All Workplace Types</option>
+              <option [ngValue]="WorkplaceType.OnSite">On-site</option>
+              <option [ngValue]="WorkplaceType.Remote">Remote</option>
+              <option [ngValue]="WorkplaceType.Hybrid">Hybrid</option>
+            </select>
+          </div>
+
+          <!-- Employment Type -->
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-employment">Job Type</label>
+            <select
+              id="filter-employment"
+              class="form-control"
+              formControlName="employmentType"
+              (change)="onFilterSelect()"
+            >
+              <option [ngValue]="null">All Job Types</option>
+              <option [ngValue]="EmploymentType.FullTime">Full Time</option>
+              <option [ngValue]="EmploymentType.PartTime">Part Time</option>
+              <option [ngValue]="EmploymentType.Contract">Contract</option>
+              <option [ngValue]="EmploymentType.Internship">Internship</option>
+              <option [ngValue]="EmploymentType.Freelance">Freelance</option>
+            </select>
+          </div>
+
+          <!-- Experience Level -->
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-experience">Career Level</label>
+            <select
+              id="filter-experience"
+              class="form-control"
+              formControlName="experienceLevel"
+              (change)="onFilterSelect()"
+            >
+              <option [ngValue]="null">All Levels</option>
+              <option [ngValue]="ExperienceLevel.EntryLevel">Entry Level</option>
+              <option [ngValue]="ExperienceLevel.Junior">Junior</option>
+              <option [ngValue]="ExperienceLevel.MidLevel">Mid Level</option>
+              <option [ngValue]="ExperienceLevel.Senior">Senior</option>
+              <option [ngValue]="ExperienceLevel.Lead">Lead / Principal</option>
+              <option [ngValue]="ExperienceLevel.Manager">Manager</option>
+            </select>
+          </div>
+
+          <!-- Date Posted -->
+          <fieldset class="filter-group filter-group--fieldset">
+            <legend class="filter-group__label">Salary range</legend>
+            <div class="salary-fields">
+              <div>
+                <label class="sr-only" for="filter-minimum-salary">Minimum salary</label>
+                <input id="filter-minimum-salary" class="form-control" type="number" min="0" formControlName="minimumSalary" placeholder="Minimum" />
+              </div>
+              <div>
+                <label class="sr-only" for="filter-maximum-salary">Maximum salary</label>
+                <input id="filter-maximum-salary" class="form-control" type="number" min="0" formControlName="maximumSalary" placeholder="Maximum" />
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- Date Posted -->
+          <div class="filter-group">
+            <label class="filter-group__label" for="filter-date">Date Posted</label>
+            <select
+              id="filter-date"
+              class="form-control"
+              formControlName="postedWithinDays"
+              (change)="onFilterSelect()"
+            >
+              <option [ngValue]="null">Any time</option>
+              <option [ngValue]="1">Past 24 hours</option>
+              <option [ngValue]="7">Past week</option>
+              <option [ngValue]="14">Past 2 weeks</option>
+              <option [ngValue]="30">Past month</option>
+            </select>
+          </div>
+
+          <div class="filter-sidebar__mobile-actions">
+            <button
+              type="button"
+              class="btn btn--primary btn--block"
+              (click)="submitSearch()"
+            >
+              Show Results
+            </button>
+          </div>
+        </form>
+      </aside>
+
+      <!-- Backdrop for mobile drawer -->
+      @if (mobileFiltersOpen()) {
+        <div class="filter-backdrop" (click)="closeMobileFilters()" aria-hidden="true"></div>
       }
-    </div>
 
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button 
-          class="btn btn--secondary btn--sm" 
-          [disabled]="pageNumber() === 1"
-          aria-label="Go to previous jobs page"
-          (click)="prevPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button 
-          class="btn btn--secondary btn--sm" 
-          [disabled]="pageNumber() === totalPages()"
-          aria-label="Go to next jobs page"
-          (click)="nextPage()">
-          Next
-        </button>
-      </div>
-    }
-  }
+      <!-- Results Main Content -->
+      <main class="results-main">
+        <!-- Results Header Bar -->
+        <div class="results-header">
+          <div class="results-header__summary">
+            <h1 class="results-header__title">
+              {{ totalCount() }} {{ totalCount() === 1 ? 'job' : 'jobs' }} found
+            </h1>
+          </div>
+
+          <div class="results-header__sort" [formGroup]="searchForm">
+            <label for="sort-select" class="results-header__sort-label">Sort by:</label>
+            <select
+              id="sort-select"
+              class="form-control results-header__sort-select"
+              formControlName="sort"
+              (change)="onSortChange()"
+            >
+              <option [ngValue]="JobSortOrder.Newest">Newest</option>
+              <option [ngValue]="JobSortOrder.Oldest">Oldest</option>
+              <option [ngValue]="JobSortOrder.SalaryLowToHigh">Salary: Low to High</option>
+              <option [ngValue]="JobSortOrder.SalaryHighToLow">Salary: High to Low</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Active Filter Chips -->
+        @if (activeFilterChips().length > 0) {
+          <div class="filter-chips">
+            @for (chip of activeFilterChips(); track chip.key) {
+              <span class="filter-chip">
+                {{ chip.label }}
+                <button
+                  type="button"
+                  class="filter-chip__remove"
+                  (click)="removeFilter(chip.key)"
+                  [attr.aria-label]="'Remove filter ' + chip.label"
+                >
+                  &times;
+                </button>
+              </span>
+            }
+
+            <button
+              type="button"
+              class="filter-chips__clear-all"
+              (click)="clearFilters()"
+            >
+              Clear All
+            </button>
+          </div>
+        }
+
+        @if (isLoading()) {
+          <div class="job-skeletons" aria-label="Loading jobs" aria-live="polite">
+            @for (item of [1, 2, 3]; track item) {
+              <div class="job-skeleton card" aria-hidden="true">
+                <span class="skeleton job-skeleton__logo"></span>
+                <div class="job-skeleton__body">
+                  <span class="skeleton job-skeleton__title"></span>
+                  <span class="skeleton job-skeleton__line"></span>
+                  <span class="skeleton job-skeleton__line job-skeleton__line--short"></span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else if (isError()) {
+          <div class="error-state">
+            <h3 class="error-state__title">Failed to load jobs</h3>
+            <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
+            <button class="btn btn--secondary" type="button" (click)="loadJobs()">Retry</button>
+          </div>
+        } @else if (jobs().length === 0) {
+          <!-- Empty State -->
+          <app-empty-state
+            title="No jobs found"
+            message="We couldn't find any opportunities matching your active filters. Try adjusting your keywords or clearing filters."
+            icon=""
+            actionText="Clear All Filters"
+            (action)="clearFilters()"
+          />
+        } @else {
+          <!-- Vertical Jobs List -->
+          <div class="job-list-vertical">
+            @for (job of jobs(); track job.id) {
+              <app-job-card
+                [job]="job"
+                [showApply]="authService.isCandidate()"
+                (apply)="onApply($event)"
+              />
+            }
+          </div>
+
+          <!-- Pagination -->
+          <app-pagination
+            [pageNumber]="pageNumber()"
+            [totalPages]="totalPages()"
+            [totalItems]="totalCount()"
+            (pageChange)="onPageChange($event)"
+          />
+        }
+      </main>
+    </div>
+  </div>
 </div>

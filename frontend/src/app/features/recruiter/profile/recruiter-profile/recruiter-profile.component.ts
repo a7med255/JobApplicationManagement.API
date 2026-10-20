@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { RecruitersService } from '../../../../core/services/recruiters.service';
 import { ApiErrorService } from '../../../../core/services/api-error.service';
-import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-recruiter-profile',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './recruiter-profile.component.html',
   styleUrl: './recruiter-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

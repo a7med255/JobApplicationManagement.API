@@ -57,6 +57,12 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: 'notifications',
+    title: `Notifications | ${APP_CONFIG.name}`,
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/notifications/notifications.component').then((m) => m.NotificationsComponent),
+  },
 
   // ── Candidate ─────────────────────────────────────────────────────────────
   {
@@ -105,6 +111,11 @@ export const routes: Routes = [
         title: `My CVs | ${APP_CONFIG.name}`,
         loadComponent: () =>
           import('./features/candidate/cvs/candidate-cvs.component').then((m) => m.CandidateCvsComponent),
+      },
+      {
+        path: 'job-alerts',
+        title: `Job Alerts | ${APP_CONFIG.name}`,
+        loadComponent: () => import('./features/candidate/job-alerts/candidate-job-alerts.component').then((m) => m.CandidateJobAlertsComponent),
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
@@ -181,6 +192,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [authGuard, roleGuard('Admin')],
+    loadComponent: () => import('./features/admin/admin-shell.component').then((m) => m.AdminShellComponent),
     children: [
       {
         path: 'dashboard',
@@ -228,6 +240,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/recruiter/application-review/recruiter-application-review.component').then(
             (m) => m.RecruiterApplicationReviewComponent,
+          ),
+      },
+      {
+        path: 'users',
+        title: `Users & Operations | ${APP_CONFIG.name}`,
+        loadComponent: () =>
+          import('./features/admin/users/admin-users.component').then(
+            (m) => m.AdminUsersComponent,
           ),
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },

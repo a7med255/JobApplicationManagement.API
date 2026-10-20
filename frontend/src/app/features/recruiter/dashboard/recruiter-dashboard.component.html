@@ -1,64 +1,244 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">Recruiter Dashboard</h1>
-      <p class="page-header__subtitle">Create job postings and review candidate applications.</p>
+<div class="recruiter-dashboard">
+  <div class="container">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1 class="page-title">Recruiter Workspace</h1>
+        <p class="page-subtitle">Manage your hiring pipeline, review candidates, and publish open requisitions.</p>
+      </div>
+      <div class="header-actions">
+        <a routerLink="/recruiter/jobs/create" class="btn btn--primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Post a Job</span>
+        </a>
+      </div>
     </div>
-    <a routerLink="/recruiter/jobs/create" class="btn btn--primary">Post a New Job</a>
-  </div>
 
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading dashboard...</div>
-    </div>
-  } @else {
-    @if (errorMessage()) {
-      <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div>
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your recruitment dashboard...</p>
+      </div>
+    } @else {
+      @if (errorMessage()) {
+        <div class="alert alert--danger mb-4" role="alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Company Context Banner -->
+      @if (company(); as comp) {
+        <div class="card company-banner mb-4">
+          <div class="comp-info">
+            <app-company-logo [name]="comp.name" size="md" />
+            <div>
+              <h2 class="comp-name">{{ comp.name }}</h2>
+              <p class="comp-meta">
+                @if (comp.industry) { <span>{{ comp.industry }}</span> }
+                @if (comp.city || comp.country) { <span>&bull; {{ comp.city ? comp.city + ', ' : '' }}{{ comp.country }}</span> }
+                @if (comp.website) { <span>&bull; <a [href]="comp.website" target="_blank" rel="noopener noreferrer">{{ comp.website }}</a></span> }
+              </p>
+            </div>
+          </div>
+          <a routerLink="/recruiter/company" class="btn btn--outline btn--sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <span>Edit Company</span>
+          </a>
+        </div>
+      }
+
+      <!-- Key Recruitment Metrics -->
+      <div class="metrics-grid mb-5">
+        <a routerLink="/recruiter/applications" class="card metric-card">
+          <div class="metric-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <div class="metric-data">
+            <span class="metric-value">{{ totalApplications() }}</span>
+            <span class="metric-label">Total Applications</span>
+          </div>
+        </a>
+
+        <a routerLink="/recruiter/jobs" class="card metric-card">
+          <div class="metric-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <div class="metric-data">
+            <span class="metric-value">{{ activeJobsCount() }}</span>
+            <span class="metric-label">Published Jobs</span>
+          </div>
+        </a>
+
+        <a routerLink="/recruiter/applications" class="card metric-card">
+          <div class="metric-icon green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div class="metric-data">
+            <span class="metric-value">{{ shortlistedCount() }}</span>
+            <span class="metric-label">Shortlisted Candidates</span>
+            @if (pipelineMetricsArePartial()) { <span class="metric-scope">Latest 50 applications</span> }
+          </div>
+        </a>
+
+        <a routerLink="/recruiter/applications" class="card metric-card">
+          <div class="metric-icon amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div class="metric-data">
+            <span class="metric-value">{{ interviewStageCount() }}</span>
+            <span class="metric-label">Candidates at Interview Stage</span>
+            @if (pipelineMetricsArePartial()) { <span class="metric-scope">Latest 50 applications</span> }
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Action Hub -->
+      <section class="quick-actions-bar mb-5">
+        <h2 class="sub-heading">Recruitment Hub</h2>
+        <div class="hub-grid">
+          <a routerLink="/recruiter/jobs/create" class="card hub-tile">
+            <div class="hub-icon">+</div>
+            <div class="hub-text">
+              <strong>Post New Job</strong>
+              <span>Create requisition</span>
+            </div>
+          </a>
+          <a routerLink="/recruiter/jobs" class="card hub-tile">
+            <div class="hub-icon" aria-hidden="true">JOB</div>
+            <div class="hub-text">
+              <strong>Manage Jobs</strong>
+              <span>Publish, edit, or close</span>
+            </div>
+          </a>
+          <a routerLink="/recruiter/applications" class="card hub-tile">
+            <div class="hub-icon" aria-hidden="true">APP</div>
+            <div class="hub-text">
+              <strong>Review Applicants</strong>
+              <span>Screen & shortlist</span>
+            </div>
+          </a>
+          <a routerLink="/recruiter/company" class="card hub-tile">
+            <div class="hub-icon" aria-hidden="true">CO</div>
+            <div class="hub-text">
+              <strong>Company Profile</strong>
+              <span>Brand & logo details</span>
+            </div>
+          </a>
+          <a routerLink="/recruiter/profile" class="card hub-tile">
+            <div class="hub-icon" aria-hidden="true">ME</div>
+            <div class="hub-text">
+              <strong>Recruiter Profile</strong>
+              <span>Personal credentials</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- Split Activity Grid -->
+      <div class="split-activity-grid">
+        <!-- Recent Applications -->
+        <section class="card activity-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Recent Applicants</h2>
+            <a routerLink="/recruiter/applications" class="view-all-link">View all &rarr;</a>
+          </div>
+
+          @if (recentApplications().length === 0) {
+            <div class="empty-panel-text">
+              <p>No applications received yet for your job postings.</p>
+            </div>
+          } @else {
+            <div class="applicants-list">
+              @for (app of recentApplications(); track app.id) {
+                <div class="applicant-row">
+                  <div class="applicant-info">
+                    <strong class="applicant-name">
+                      <a [routerLink]="['/recruiter/applications', app.id]">
+                        {{ app.candidateName || 'Candidate #' + app.candidateId }}
+                      </a>
+                    </strong>
+                    <span class="applicant-job">Applied for {{ app.jobTitle || 'Job #' + app.jobId }}</span>
+                    <span class="applicant-time">{{ app.appliedAt | date:'mediumDate' }}</span>
+                  </div>
+
+                  <div class="applicant-actions">
+                    <app-status-badge [status]="app.jobApplicationStatus" type="application" />
+                    <a [routerLink]="['/recruiter/applications', app.id]" class="btn btn--outline btn--sm">
+                      Review
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Active Jobs -->
+        <section class="card activity-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Recent Job Postings</h2>
+            <a routerLink="/recruiter/jobs" class="view-all-link">View all &rarr;</a>
+          </div>
+
+          @if (myJobs().length === 0) {
+            <div class="empty-panel-text">
+              <p>You haven't posted any jobs yet.</p>
+              <a routerLink="/recruiter/jobs/create" class="btn btn--primary btn--sm mt-2">Create First Job</a>
+            </div>
+          } @else {
+            <div class="jobs-list">
+              @for (job of myJobs(); track job.id) {
+                <div class="job-item-row">
+                  <div class="job-info">
+                    <strong class="job-title">
+                      <a [routerLink]="['/recruiter/jobs']">
+                        {{ job.title }}
+                      </a>
+                    </strong>
+                    <span class="job-meta">
+                      @if (job.city || job.country) { {{ job.city ? job.city + ', ' : '' }}{{ job.country }} &bull; }
+                      {{ job.category }}
+                    </span>
+                  </div>
+
+                  <div class="job-status-col">
+                    <app-status-badge [status]="job.status" type="job" />
+                    <a [routerLink]="['/recruiter/jobs']" class="btn btn--outline btn--sm">
+                      Manage
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
     }
-
-    <div class="stats-grid">
-      <a class="stat-card stat-card--hoverable" routerLink="/recruiter/applications">
-        <h3 class="stat-card__label">Total Applications</h3>
-        <div class="stat-card__value">{{ totalApplications() }}</div>
-      </a>
-    </div>
-
-    <div class="dashboard-actions">
-      <div class="card dashboard-action-card">
-        <div class="action-icon" aria-hidden="true">&#127970;</div>
-        <h3>Company Profile</h3>
-        <p>Manage the company information displayed on your job postings.</p>
-        <a routerLink="/recruiter/company" class="btn btn--secondary mt-auto">Manage Company</a>
-      </div>
-
-      <div class="card dashboard-action-card">
-        <div class="action-icon" aria-hidden="true">&#128100;</div>
-        <h3>My Profile</h3>
-        <p>Manage your personal recruiter information.</p>
-        <a routerLink="/recruiter/profile" class="btn btn--secondary mt-auto">Manage Profile</a>
-      </div>
-
-      <div class="card dashboard-action-card">
-        <div class="action-icon" aria-hidden="true">&#128188;</div>
-        <h3>Create a Job</h3>
-        <p>Publish a new opportunity for candidates.</p>
-        <a routerLink="/recruiter/jobs/create" class="btn btn--secondary mt-auto">Post Job</a>
-      </div>
-
-      <div class="card dashboard-action-card">
-        <div class="action-icon" aria-hidden="true">&#128203;</div>
-        <h3>Manage Jobs</h3>
-        <p>Publish, edit, close, reopen, or archive your job postings.</p>
-        <a routerLink="/recruiter/jobs" class="btn btn--secondary mt-auto">View My Jobs</a>
-      </div>
-
-      <div class="card dashboard-action-card">
-        <div class="action-icon" aria-hidden="true">&#128101;</div>
-        <h3>Review Applications</h3>
-        <p>Review applications and update their statuses.</p>
-        <a routerLink="/recruiter/applications" class="btn btn--secondary mt-auto">View Applications</a>
-      </div>
-    </div>
-  }
+  </div>
 </div>

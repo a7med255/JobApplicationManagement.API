@@ -5,11 +5,13 @@ namespace JobApplicationManagement.Domain.Enums;
 /// </summary>
 public enum JobApplicationStatus
 {
-    Applied,
-    UnderReview,
-    Cancelled,
-    InterView,
-    Accepted,
-    Rejected
-
+    Applied = 0,
+    UnderReview = 1,
+    Cancelled = 2,
+    Interview = 3,
+    [Obsolete("Use Interview.")]
+    InterView = Interview,
+    Accepted = 4,
+    Rejected = 5,
+    Shortlisted = 6
 }

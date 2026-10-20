@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -25,6 +25,10 @@ export class LoginComponent {
 
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly isEmailUnverified = computed(() => {
+    const msg = this.errorMessage();
+    return !!msg && (msg.toLowerCase().includes('verify') || msg.toLowerCase().includes('confirmed'));
+  });
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -48,8 +52,26 @@ export class LoginComponent {
           void this.router.navigateByUrl(this.getSafeReturnUrl());
         },
         error: (error: HttpErrorResponse) => {
-          if (error.status === 401 || error.status === 400) {
-            this.errorMessage.set('Invalid email or password.');
+          if (error.status === 401) {
+            this.errorMessage.set(
+              this.apiError.getMessage(error, 'Invalid email or password.'),
+            );
+          } else if (error.status === 400) {
+            this.errorMessage.set(
+              this.apiError.getMessage(error, 'Please check your input and try again.'),
+            );
+          } else if (error.status === 403) {
+            this.errorMessage.set(
+              this.apiError.getMessage(error, 'Access denied.'),
+            );
+          } else if (error.status === 404) {
+            this.errorMessage.set(
+              this.apiError.getMessage(error, 'The requested resource was not found.'),
+            );
+          } else if (error.status === 409) {
+            this.errorMessage.set(
+              this.apiError.getMessage(error, 'A conflict occurred. Please try again.'),
+            );
           } else {
             this.errorMessage.set(
               this.apiError.getMessage(error, 'An error occurred during login. Please try again later.'),
@@ -59,28 +81,6 @@ export class LoginComponent {
       });
   }
 
-  loginWithGoogle(): void {
-    // For demo/testing, simulate a prompt for the user's Google email
-    const simulatedEmail = prompt("Enter your Google email to simulate external login:", "googleuser@gmail.com");
-    if (!simulatedEmail) return;
-
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    this.authService
-      .externalLogin({ provider: 'Google', idToken: simulatedEmail })
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: () => {
-          void this.router.navigate([this.authService.getDefaultRoute()]);
-        },
-        error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(
-            this.apiError.getMessage(error, 'External login failed. Please try again.'),
-          );
-        },
-      });
-  }
 
   isFieldInvalid(field: LoginField): boolean {
     const control = this.form.get(field);

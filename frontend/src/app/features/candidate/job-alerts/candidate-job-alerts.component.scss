@@ -1,0 +1,10 @@
+.alert-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 1rem; align-items: end; margin-bottom: 1.5rem; }
+.form-group { margin: 0; }
+.alerts { display: grid; gap: .75rem; }
+.alerts article { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.alerts h2 { font-size: 1.1rem; }
+.alerts p { color: var(--text-secondary); }
+.actions { display: flex; gap: .5rem; }
+.delete-confirm { display: inline-flex; align-items: center; gap: .35rem; font-size: .8125rem; color: var(--text-secondary); }
+@media (max-width: 900px) { .alert-form { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .alert-form { grid-template-columns: 1fr; } .alerts article { align-items: flex-start; flex-direction: column; } }

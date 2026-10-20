@@ -1,36 +1,101 @@
-.back-link {
-  display: inline-block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  
-  &:hover {
-    color: var(--text-primary);
-  }
+.saved-jobs-page {
+  padding: 2rem 0 4rem;
+  background-color: var(--bg-body, #f8fafc);
+  min-height: calc(100vh - 140px);
 }
 
-.mt-3 {
-  margin-top: 1rem;
-}
-
-.job-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-  gap: 1.5rem;
+.page-header {
   margin-bottom: 2rem;
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+.breadcrumb-nav {
+  margin-bottom: 0.75rem;
 
-  &__info {
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--text-secondary, #64748b);
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--color-primary, #0056b3);
+    }
+  }
+}
+
+.header-titles {
+  .page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a);
+    margin: 0 0 0.35rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .count-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      background-color: var(--bg-surface, #e2e8f0);
+      color: var(--text-secondary, #475569);
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+    }
+  }
+
+  .page-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary, #64748b);
+    margin: 0;
+  }
+}
+
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary, #64748b);
+  gap: 1rem;
+}
+
+.error-card {
+  text-align: center;
+  padding: 3rem 2rem;
+  max-width: 480px;
+  margin: 2rem auto;
+
+  .error-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary, #0f172a);
+  }
+
+  p {
+    color: var(--text-secondary, #64748b);
+    margin-bottom: 1.5rem;
   }
 }

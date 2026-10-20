@@ -41,6 +41,14 @@ export class JobsService {
     return this.http.get<JobResponse>(`${this.apiUrl}/${id}`);
   }
 
+  getSimilar(id: number, limit = 4): Observable<JobSummary[]> {
+    return this.http.get<JobSummary[]>(`${this.apiUrl}/${id}/similar`, { params: { limit } });
+  }
+
+  getRecommended(limit = 6): Observable<JobSummary[]> {
+    return this.http.get<JobSummary[]>(`${this.apiUrl}/recommended`, { params: { limit } });
+  }
+
   create(request: CreateJobRequest): Observable<JobResponse> {
     return this.http.post<JobResponse>(this.apiUrl, request);
   }

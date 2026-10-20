@@ -1,6 +1,7 @@
 using JobApplicationManagement.Application.Common.Exceptions;
 using JobApplicationManagement.Application.Common.Interfaces;
 using JobApplicationManagement.Domain.Enums;
+using JobApplicationManagement.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,15 +13,10 @@ public class CancelApplicationCommandHandler : IRequestHandler<CancelApplication
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IBackgroundJob _backgroundJob;
-
-
-    public CancelApplicationCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService , IBackgroundJob backgroundJob)
+    public CancelApplicationCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
-        _backgroundJob = backgroundJob;
-
     }
 
     public async Task Handle(CancelApplicationCommand request, CancellationToken cancellationToken)
@@ -30,7 +26,7 @@ public class CancelApplicationCommandHandler : IRequestHandler<CancelApplication
         if (application is null)
             throw new NotFoundException("JobApplication", request.ApplicationId);
 
-        var userId = _currentUserService.UserId;
+        var userId = _currentUserService.UserId ?? throw new ForbiddenException("An authenticated user is required.");
         var candidate = await _unitOfWork.Candidates.Query()
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
@@ -49,13 +45,23 @@ public class CancelApplicationCommandHandler : IRequestHandler<CancelApplication
                 "Only applications with status 'Applied' or 'UnderReview' can be cancelled.");
         }
 
+        var oldStatus = application.JobApplicationStatus;
+        var now = DateTime.UtcNow;
         application.JobApplicationStatus = JobApplicationStatus.Cancelled;
-        application.CancelledAt = DateTime.UtcNow;
-        application.StatusUpdatedAt = DateTime.UtcNow;
+        application.CancelledAt = now;
+        application.StatusUpdatedAt = now;
+
+        await _unitOfWork.ApplicationStatusHistory.AddAsync(new ApplicationStatusHistory
+        {
+            ApplicationId = application.Id,
+            OldStatus = oldStatus,
+            NewStatus = JobApplicationStatus.Cancelled,
+            ChangedByUserId = userId,
+            ChangedAt = now,
+            Note = "Cancelled by candidate"
+        });
 
         _unitOfWork.JobApplications.Update(application);
-        await _unitOfWork.SaveChangesAsync();
-
-        _backgroundJob.Enqueue<INotificationService>(b => b.NotifyCandiate(application.Id));
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

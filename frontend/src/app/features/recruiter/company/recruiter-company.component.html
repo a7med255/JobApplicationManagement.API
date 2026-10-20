@@ -1,21 +1,186 @@
-<div class="container company-page">
-  <div class="page-header">
-    <div><a routerLink="/recruiter/dashboard" class="back-link">&larr; Back to dashboard</a><h1 class="page-header__title mt-3">Company profile</h1><p class="page-header__subtitle">This information appears on every job posting.</p></div>
-  </div>
-  @if (isLoading()) { <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading company...</div></div> }
-  @if (message()) { <div class="alert" [class.alert--danger]="isError()" [class.alert--success]="!isError()" role="status">{{ message() }}</div> }
-  <form class="card company-form" [formGroup]="form" (ngSubmit)="save()">
-    <div class="form-grid">
-      <div class="form-group"><label class="form-label" for="company-name">Company name *</label><input id="company-name" class="form-control" formControlName="name"></div>
-      <div class="form-group"><label class="form-label" for="industry">Industry</label><input id="industry" class="form-control" formControlName="industry"></div>
-      <div class="form-group"><label class="form-label" for="company-size">Company size</label><input id="company-size" class="form-control" formControlName="companySize" placeholder="e.g. 51–200 employees"></div>
-      <div class="form-group"><label class="form-label" for="website">Website</label><input id="website" class="form-control" type="url" formControlName="website"></div>
-      <div class="form-group"><label class="form-label" for="logo">Logo URL</label><input id="logo" class="form-control" type="url" formControlName="logoUrl"></div>
-      <div class="form-group"><label class="form-label" for="headquarters">Headquarters</label><input id="headquarters" class="form-control" formControlName="headquarters"></div>
-      <div class="form-group"><label class="form-label" for="country">Country</label><input id="country" class="form-control" formControlName="country"></div>
-      <div class="form-group"><label class="form-label" for="city">City</label><input id="city" class="form-control" formControlName="city"></div>
-      <div class="form-group form-group--full"><label class="form-label" for="company-description">About the company</label><textarea id="company-description" class="form-control" rows="7" formControlName="description"></textarea></div>
+<div class="company-page">
+  <div class="container">
+    <div class="page-header">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a routerLink="/recruiter/dashboard" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Dashboard
+        </a>
+      </nav>
+      <h1 class="page-title">Company Profile</h1>
+      <p class="page-subtitle">This information is featured on all your job requisitions and candidate notifications.</p>
     </div>
-    <div class="form-actions"><a routerLink="/recruiter/dashboard" class="btn btn--secondary">Cancel</a><button class="btn btn--primary" type="submit" [disabled]="isSaving()">{{ isSaving() ? 'Saving...' : 'Save company' }}</button></div>
-  </form>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading company information...</p>
+      </div>
+    } @else {
+      @if (message()) {
+        <div class="alert mb-4" [class.alert--danger]="isError()" [class.alert--success]="!isError()" role="status">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            @if (isError()) {
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            } @else {
+              <polyline points="20 6 9 17 4 12"></polyline>
+            }
+          </svg>
+          <span>{{ message() }}</span>
+        </div>
+      }
+
+      <form class="company-form" [formGroup]="form" (ngSubmit)="save()">
+        <!-- Logo & Branding Card -->
+        <section class="card form-section mb-4">
+          <div class="section-header">
+            <div class="section-icon">🏢</div>
+            <div>
+              <h2 class="section-title">Brand & Logo</h2>
+              <p class="section-desc">Your company visual mark displayed on job cards and listings.</p>
+            </div>
+          </div>
+
+          <div class="logo-upload-wrapper">
+            <div class="logo-box">
+              @if (logoUrl()) {
+                <img [src]="logoUrl()" alt="Company logo" class="logo-img" />
+              } @else {
+                <div class="logo-placeholder" aria-hidden="true">
+                  {{ (form.get('name')?.value || 'C')[0] }}
+                </div>
+              }
+            </div>
+
+            <div class="logo-controls">
+              <label class="btn btn--secondary btn--sm logo-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>{{ isUploadingLogo() ? 'Uploading...' : 'Upload Logo' }}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  (change)="uploadLogo($event)"
+                  [disabled]="isUploadingLogo()"
+                  class="file-input-hidden"
+                />
+              </label>
+              <span class="upload-hint">JPEG, PNG, or WebP. Maximum {{ maximumImageMegabytes }} MB. Save company first before uploading logo.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Company Details Card -->
+        <section class="card form-section mb-4">
+          <div class="section-header">
+            <div class="section-icon">ℹ️</div>
+            <div>
+              <h2 class="section-title">Company Overview</h2>
+              <p class="section-desc">Basic identification and size parameters.</p>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label required" for="company-name">Company Name</label>
+              <input id="company-name" class="form-control" formControlName="name" placeholder="e.g. Acme Technologies" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="industry">Industry</label>
+              <input id="industry" class="form-control" formControlName="industry" placeholder="e.g. Software & FinTech" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="company-size">Company Size</label>
+              <input id="company-size" class="form-control" formControlName="companySize" placeholder="e.g. 51–200 employees" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="website">Website</label>
+              <input id="website" class="form-control" type="url" formControlName="website" placeholder="https://acme.com" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Location Card -->
+        <section class="card form-section mb-4">
+          <div class="section-header">
+            <div class="section-icon" aria-hidden="true">HQ</div>
+            <div>
+              <h2 class="section-title">Location & Headquarters</h2>
+              <p class="section-desc">Where your company is headquartered.</p>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label" for="country">Country</label>
+              <input id="country" class="form-control" formControlName="country" placeholder="e.g. Egypt" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="city">City</label>
+              <input id="city" class="form-control" formControlName="city" placeholder="e.g. Cairo" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="headquarters">Headquarters Address</label>
+              <input id="headquarters" class="form-control" formControlName="headquarters" placeholder="e.g. New Cairo, Fifth Settlement" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Description Card -->
+        <section class="card form-section mb-4">
+          <div class="section-header">
+            <div class="section-icon">📝</div>
+            <div>
+              <h2 class="section-title">About the Company</h2>
+              <p class="section-desc">Mission statement, culture, and what makes your organization special.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <textarea
+              id="company-description"
+              class="form-control desc-textarea"
+              rows="6"
+              formControlName="description"
+              placeholder="Tell candidates about your mission, values, work culture, and products..."
+            ></textarea>
+            <span class="field-hint">Max 5,000 characters. Featured on every job post.</span>
+          </div>
+        </section>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <a routerLink="/recruiter/dashboard" class="btn btn--outline">
+            Cancel
+          </a>
+          <button class="btn btn--primary" type="submit" [disabled]="isSaving() || form.invalid">
+            @if (isSaving()) {
+              <span class="spinner"></span>
+              <span>Saving Company...</span>
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Save Company Profile</span>
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
 </div>

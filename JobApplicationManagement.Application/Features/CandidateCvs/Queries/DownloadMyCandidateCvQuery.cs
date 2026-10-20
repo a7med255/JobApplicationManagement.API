@@ -13,11 +13,16 @@ public class DownloadMyCandidateCvQueryHandler : IRequestHandler<DownloadMyCandi
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IFileStorageService _fileStorage;
 
-    public DownloadMyCandidateCvQueryHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+    public DownloadMyCandidateCvQueryHandler(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService,
+        IFileStorageService fileStorage)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _fileStorage = fileStorage;
     }
 
     public async Task<FileDownloadDto> Handle(DownloadMyCandidateCvQuery request, CancellationToken cancellationToken)
@@ -28,6 +33,12 @@ public class DownloadMyCandidateCvQueryHandler : IRequestHandler<DownloadMyCandi
             .FirstOrDefaultAsync(item => item.Id == request.Id && item.CandidateId == candidate.Id && !item.IsDeleted,
                 cancellationToken)
             ?? throw new NotFoundException(nameof(CandidateCv), request.Id);
-        return new FileDownloadDto(cv.Content, cv.ContentType, cv.OriginalFileName);
+        var content = cv.Content;
+        if (content is null && !string.IsNullOrWhiteSpace(cv.StorageKey))
+            content = await _fileStorage.DownloadPrivateAsync(
+                cv.StorageKey, cv.ResourceType, cv.DeliveryType, cancellationToken);
+        if (content is null)
+            throw new NotFoundException(nameof(CandidateCv), request.Id);
+        return new FileDownloadDto(content, cv.ContentType, cv.OriginalFileName);
     }
 }

@@ -1,172 +1,540 @@
-.job-details-container {
-  padding-top: 2rem;
-  padding-bottom: 4rem;
-}
+.job-details-page {
+  padding-top: 1.5rem;
+  padding-bottom: 3.5rem;
 
-.back-link {
-  display: inline-block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 1.5rem;
-  
-  &:hover {
-    color: var(--text-primary);
+  &__breadcrumb {
+    margin-bottom: 1rem;
   }
 }
 
-.job-details-layout {
+// ── Header Banner Card ──────────────────────────────────────────────────────
+.job-header {
+  margin-bottom: 1.75rem;
+
+  &__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+    }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.375rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__company {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0 0 0.875rem;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    svg {
+      color: var(--text-muted);
+    }
+  }
+}
+
+// ── 2-Column Layout: Main Content + Sticky Sidebar ──────────────────────────
+.job-layout {
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 2rem;
-  align-items: start;
-  
-  @media (max-width: 992px) {
+  gap: 1.75rem;
+  align-items: flex-start;
+
+  @media (max-width: 960px) {
     grid-template-columns: 1fr;
   }
 }
 
-.job-main {
+.job-content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 
-.job-header-card {
-  padding: 2rem;
-}
-
-.company-heading {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  img {
-    width: 64px;
-    height: 64px;
-    border-radius: var(--radius-sm);
-    object-fit: contain;
-    border: 1px solid var(--border-color);
-  }
-}
-
-.company-name { margin: .25rem 0 1rem; color: var(--text-secondary); }
-
-.detail-section { padding: 1.75rem; }
-.detail-section h2 { margin-bottom: 1rem; }
-.detail-section h3 { margin: 1.5rem 0 .5rem; font-size: 1rem; }
-.preserve-lines { white-space: pre-line; line-height: 1.75; color: var(--text-secondary); }
-.skill-list { display: flex; flex-wrap: wrap; gap: .6rem; }
-.skill { padding: .4rem .75rem; border-radius: 999px; background: var(--background-secondary); font-size: .875rem; }
-.skill--required { color: var(--color-primary); border: 1px solid currentColor; }
-.company-facts { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin: 1rem 0; color: var(--text-secondary); }
-
-.job-title {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.job-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.section-title {
-  font-size: 1.125rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.job-description-content {
-  font-size: 1rem;
-  line-height: 1.8;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-}
-
-.action-card {
-  position: sticky;
-  top: 88px; // Navbar height + gap
-  
+.job-section {
   &__title {
-    font-size: 1.125rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.1875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.625rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  &__subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  &__text {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
   }
 }
 
-.job-facts { margin-top: 1rem; }
-.job-facts h2 { font-size: 1.1rem; margin-bottom: 1rem; }
-.job-facts dl { margin: 0; }
-.job-facts dl div { padding: .75rem 0; border-bottom: 1px solid var(--border-color); }
-.job-facts dt { color: var(--text-secondary); font-size: .8rem; }
-.job-facts dd { margin: .2rem 0 0; font-weight: 600; }
+.preserve-lines {
+  white-space: pre-line;
+}
 
-.mb-0 { margin-bottom: 0; }
-.mb-3 { margin-bottom: 1rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 1rem; }
-.text-center { text-align: center; }
-.text-sm { font-size: 0.875rem; }
+.job-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 
-.alert {
-  padding: 1rem;
+.job-skill-badge {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: #f1f5f9;
+  border: 1px solid var(--border-color);
+  padding: 0.35rem 0.75rem;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  
-  &--info {
-    background: var(--color-info-bg);
-    color: var(--color-info);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-  }
-  
-  &--warning {
-    background: var(--color-warning-bg);
-    color: var(--color-warning);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-  }
-  
-  &--danger {
-    background: var(--color-danger-bg);
-    color: var(--color-danger);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-  }
-  
-  &--success {
-    background: var(--color-success-bg);
-    color: var(--color-success);
-    border: 1px solid rgba(34, 197, 94, 0.2);
+
+  &--required {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary-border);
+    font-weight: 600;
   }
 }
 
-.success-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--color-success);
-  color: white;
-  border-radius: 50%;
+.company-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.company-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  &__val {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+  }
+}
+
+.company-website {
+  margin-top: 1rem;
+
+  &__link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+}
+
+// ── Sticky Sidebar Action Card ──────────────────────────────────────────────
+.job-sidebar {
+  position: sticky;
+  top: 80px;
+
+  @media (max-width: 960px) {
+    position: static;
+  }
+}
+
+.job-action-card {
+  padding: 1.5rem;
+
+  &__apply-btn {
+    font-size: 1rem;
+    padding: 0.875rem;
+  }
+}
+
+.job-summary {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+
+  &__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+
+    dt {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    dd {
+      color: var(--text-primary);
+      font-weight: 600;
+      text-align: right;
+      margin: 0;
+    }
+  }
+}
+
+// ── Similar Jobs ────────────────────────────────────────────────────────────
+.similar-jobs {
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+
+  &__title {
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ── Apply Modal / Drawer ────────────────────────────────────────────────────
+.apply-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 0 auto 1rem;
+  padding: 1.5rem;
 }
 
-.spinner {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 0.8s ease-in-out infinite;
-  margin-right: 0.5rem;
+.apply-modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dropdown);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  &__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0.15rem 0;
+  }
+
+  &__company {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &__close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 0.25rem;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  &__body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: #f8fafc;
+  }
+}
+
+.apply-step {
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.875rem;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__desc {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0.625rem;
+  }
+}
+
+// ── CV Radio Cards ──────────────────────────────────────────────────────────
+.cv-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.cv-radio-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+
+  &--selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-subtle);
+  }
+
+  &__input {
+    accent-color: var(--color-primary);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  &__details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+}
+
+// ── CV Dropzone Box ─────────────────────────────────────────────────────────
+.cv-dropzone-box {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  &__cancel {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+}
+
+.cv-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+
+  &__icon {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.5rem;
+    min-height: 2rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+  }
+
+  &__subtext {
+    font-size: 0.8125rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    margin-top: 0.15rem;
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.375rem;
+  }
+
+  &__input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+.cv-selected-file {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.cv-dropzone-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

@@ -84,6 +84,8 @@ public class ApplicationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAllApplications([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 50);
         var roles = _currentUserService.Roles.ToList();
         PaginatedResult<JobApplicationResponseDto> response;
 

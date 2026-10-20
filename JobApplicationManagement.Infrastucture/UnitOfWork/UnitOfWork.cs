@@ -22,13 +22,17 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<Skill>? _skills;
     private IGenericRepository<JobSkill>? _jobSkills;
     private IGenericRepository<CandidateCv>? _candidateCvs;
+    private IGenericRepository<ApplicationStatusHistory>? _applicationStatusHistory;
+    private IGenericRepository<Notification>? _notifications;
+    private IGenericRepository<Interview>? _interviews;
+    private IGenericRepository<OutboxMessage>? _outboxMessages;
+    private IGenericRepository<NotificationPreference>? _notificationPreferences;
+    private IGenericRepository<JobAlert>? _jobAlerts;
+    private IGenericRepository<AdminAuditLog>? _adminAuditLogs;
 
-    public INotificationService NotificationService { get; }
-
-    public UnitOfWork(ApplicationDbContext context, INotificationService notificationService)
+    public UnitOfWork(ApplicationDbContext context)
     {
         _context = context;
-        NotificationService = notificationService;
     }
 
     /// <inheritdoc/>
@@ -63,9 +67,41 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<CandidateCv> CandidateCvs
         => _candidateCvs ??= new GenericRepository<CandidateCv>(_context);
 
+    public IGenericRepository<ApplicationStatusHistory> ApplicationStatusHistory
+        => _applicationStatusHistory ??= new GenericRepository<ApplicationStatusHistory>(_context);
+
+    public IGenericRepository<Notification> Notifications
+        => _notifications ??= new GenericRepository<Notification>(_context);
+
+    public IGenericRepository<Interview> Interviews
+        => _interviews ??= new GenericRepository<Interview>(_context);
+
+    public IGenericRepository<OutboxMessage> OutboxMessages
+        => _outboxMessages ??= new GenericRepository<OutboxMessage>(_context);
+
+    public IGenericRepository<NotificationPreference> NotificationPreferences
+        => _notificationPreferences ??= new GenericRepository<NotificationPreference>(_context);
+
+    public IGenericRepository<JobAlert> JobAlerts
+        => _jobAlerts ??= new GenericRepository<JobAlert>(_context);
+    public IGenericRepository<AdminAuditLog> AdminAuditLogs
+        => _adminAuditLogs ??= new GenericRepository<AdminAuditLog>(_context);
+
     /// <inheritdoc/>
     public async Task<int> SaveChangesAsync()
         => await _context.SaveChangesAsync();
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        => await _context.SaveChangesAsync(cancellationToken);
+
+    public async Task ExecuteInTransactionAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        await operation(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
 
     public void Dispose()
         => _context.Dispose();

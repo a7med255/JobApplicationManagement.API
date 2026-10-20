@@ -12,36 +12,50 @@ import { ApiErrorService } from '../../../core/services/api-error.service';
   imports: [ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-container">
-      <div class="auth-card">
-        <h1 class="auth-title">Reset Password</h1>
-        <p class="auth-subtitle">Enter the OTP and your new password</p>
+      <div class="card auth-card">
+        <div class="auth-header">
+          <div class="auth-logo" aria-hidden="true">6</div>
+          <h1 class="auth-title">Choose a new password</h1>
+          <p class="auth-subtitle">Enter the six-digit code sent to {{ email() }}.</p>
+        </div>
 
         @if (successMessage()) {
-          <div class="alert alert-success">{{ successMessage() }}</div>
+          <div class="alert alert--success" role="status">{{ successMessage() }}</div>
         }
         @if (errorMessage()) {
-          <div class="alert alert-error">{{ errorMessage() }}</div>
+          <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div>
         }
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
           <div class="form-group">
-            <label for="otp">One-Time Password</label>
-            <input id="otp" type="text" formControlName="otp" placeholder="123456" />
+            <label for="otp" class="form-label">One-time code</label>
+            <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" formControlName="otp" class="form-control" placeholder="123456" />
+            @if (form.controls.otp.invalid && form.controls.otp.touched) {
+              <div class="form-error">Enter the six-digit code.</div>
+            }
           </div>
           
           <div class="form-group">
-            <label for="newPassword">New Password</label>
-            <input id="newPassword" type="password" formControlName="newPassword" />
+            <label for="newPassword" class="form-label">New password</label>
+            <input id="newPassword" type="password" autocomplete="new-password" formControlName="newPassword" class="form-control" aria-describedby="new-password-help" />
+            <span id="new-password-help" class="form-helper">Use 8+ characters with uppercase, lowercase, and a number.</span>
+            @if (form.controls.newPassword.invalid && form.controls.newPassword.touched) {
+              <div class="form-error">Enter a valid password that meets the requirements.</div>
+            }
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading() || form.invalid">
+          <button type="submit" class="btn btn--primary btn--block btn--lg auth-submit" [disabled]="isLoading()" [attr.aria-busy]="isLoading()">
             @if (isLoading()) {
-              <span class="spinner"></span>
+              <span class="spinner"></span> Updating password...
             } @else {
-              Reset Password
+              Update password
             }
           </button>
         </form>
+
+        <div class="auth-footer">
+          <p class="auth-footer-text"><a routerLink="/login" class="auth-link">Back to sign in</a></p>
+        </div>
       </div>
     </div>
   `,
@@ -61,8 +75,15 @@ export class ResetPasswordComponent implements OnInit {
   protected readonly email = signal('');
 
   protected readonly form = this.fb.nonNullable.group({
-    otp: ['', [Validators.required]],
-    newPassword: ['', [Validators.required, Validators.minLength(8)]],
+    otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+    newPassword: ['', [
+      Validators.required,
+      Validators.minLength(8),
+      Validators.maxLength(100),
+      Validators.pattern(/[a-z]/),
+      Validators.pattern(/[A-Z]/),
+      Validators.pattern(/\d/),
+    ]],
   });
 
   ngOnInit() {
@@ -75,7 +96,10 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.isLoading.set(true);
     this.errorMessage.set(null);

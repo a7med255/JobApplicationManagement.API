@@ -27,7 +27,16 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(rt => rt.CreatedAt)
             .IsRequired();
 
-        builder.HasIndex(rt => rt.TokenHash);
+        builder.Property(rt => rt.CreatedByIp)
+            .HasMaxLength(45);
+
+        builder.Property(rt => rt.RevokedByIp)
+            .HasMaxLength(45);
+
+        builder.Property(rt => rt.ReplacedByTokenHash)
+            .HasMaxLength(256);
+
+        builder.HasIndex(rt => rt.TokenHash).IsUnique();
         builder.HasIndex(rt => rt.UserId);
     }
 }

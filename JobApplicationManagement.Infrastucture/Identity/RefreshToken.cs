@@ -23,4 +23,19 @@ public class RefreshToken
     /// If set, this token has been revoked and can no longer be used.
     /// </summary>
     public DateTime? RevokedAt { get; set; }
+
+    /// <summary>
+    /// IPv4/IPv6 address of the client that created this token.
+    /// </summary>
+    public string? CreatedByIp { get; set; }
+
+    /// <summary>
+    /// IPv4/IPv6 address of the client that revoked this token.
+    /// </summary>
+    public string? RevokedByIp { get; set; }
+
+    /// <summary>
+    /// Hash of the successor refresh token that replaced this one during rotation.
+    /// </summary>
+    public string? ReplacedByTokenHash { get; set; }
 }

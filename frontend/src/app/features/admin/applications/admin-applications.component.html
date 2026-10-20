@@ -1,89 +1,144 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
-      <h1 class="page-header__title mt-3">Manage All Applications</h1>
-      <p class="page-header__subtitle">{{ totalCount() }} application{{ totalCount() === 1 ? '' : 's' }}</p>
-    </div>
-  </div>
-
-  @if (actionError()) {
-    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
-  }
-
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading applications...</div>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="error-state">
-      <h2 class="error-state__title">{{ errorMessage() }}</h2>
-      <button class="btn btn--secondary" type="button" (click)="loadApplications()">Retry</button>
-    </div>
-  } @else if (applications().length === 0) {
-    <div class="empty-state">
-      <h2 class="empty-state__title">No applications found</h2>
-      <p class="empty-state__message">There are no applications in the system.</p>
-    </div>
-  } @else {
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Application ID</th>
-            <th>Candidate ID</th>
-            <th>Job ID</th>
-            <th>Applied On</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (application of applications(); track application.id) {
-            <tr>
-              <td>#{{ application.id }}</td>
-              <td>Candidate #{{ application.candidateId }}</td>
-              <td>
-                <a [routerLink]="['/jobs', application.jobId]" class="job-link">Job #{{ application.jobId }}</a>
-              </td>
-              <td>{{ application.appliedAt | date:'mediumDate' }}</td>
-              <td><app-application-status-badge [status]="application.jobApplicationStatus" /></td>
-              <td>
-                <div class="action-buttons">
-                  <a [routerLink]="['/admin/applications', application.id]" class="btn btn--secondary btn--sm">Review</a>
-                  @if (confirmDeleteId() === application.id) {
-                    <span class="confirmation-text">Delete permanently?</span>
-                    <button
-                      class="btn btn--danger btn--sm"
-                      type="button"
-                      [disabled]="pendingId() === application.id"
-                      (click)="deleteApplication(application.id)"
-                    >
-                      {{ pendingId() === application.id ? 'Deleting...' : 'Confirm' }}
-                    </button>
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
-                  } @else {
-                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(application.id)">Delete</button>
-                  }
-                </div>
-              </td>
-            </tr>
+<div class="admin-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/admin/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">
+          Manage All Applications
+          @if (!isLoading() && totalCount() > 0) {
+            <span class="count-badge">{{ totalCount() }}</span>
           }
-        </tbody>
-      </table>
+        </h1>
+        <p class="page-subtitle">Platform-wide candidate submission records, recruitment pipelines, and review logs.</p>
+      </div>
     </div>
 
-    @if (totalPages() > 1) {
-      <nav class="pagination" aria-label="Application pages">
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="prevPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
-          Next
-        </button>
-      </nav>
+    @if (actionError()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ actionError() }}</span>
+      </div>
     }
-  }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading application records...</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="loadApplications()">Retry</button>
+      </div>
+    } @else if (applications().length === 0) {
+      <app-empty-state
+        icon=""
+        title="No applications found"
+        message="There are no job application submissions in the system yet."
+      />
+    } @else {
+      <div class="table-card card">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Submission ID</th>
+                <th>Applicant</th>
+                <th>Job & Company</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (app of applications(); track app.id) {
+                <tr>
+                  <td>
+                    <div class="app-id-tag">#{{ app.id }}</div>
+                  </td>
+                  <td>
+                    <div class="applicant-cell">
+                      <strong class="applicant-name">{{ app.candidateName || 'Candidate #' + app.candidateId }}</strong>
+                      <span class="applicant-id">ID: #{{ app.candidateId }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="job-cell">
+                      <a [routerLink]="['/jobs', app.jobId]" target="_blank" class="job-title-link">
+                        {{ app.jobTitle || 'Job #' + app.jobId }}
+                      </a>
+                      <span class="company-sub">{{ app.companyName || 'Company not provided' }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="date-text">{{ app.appliedAt | date:'mediumDate' }}</span>
+                  </td>
+                  <td>
+                    <app-status-badge [status]="app.jobApplicationStatus" type="application" />
+                  </td>
+                  <td class="text-right">
+                    <div class="actions-group">
+                      <a [routerLink]="['/admin/applications', app.id]" class="btn btn--outline btn--sm">
+                        Review
+                      </a>
+
+                      @if (confirmDeleteId() === app.id) {
+                        <span class="inline-confirm">
+                          <span>Delete?</span>
+                          <button
+                            class="btn btn--danger btn--sm"
+                            type="button"
+                            [disabled]="pendingId() === app.id"
+                            (click)="deleteApplication(app.id)"
+                          >
+                            {{ pendingId() === app.id ? '...' : 'Yes' }}
+                          </button>
+                          <button class="btn btn--outline btn--sm" type="button" (click)="cancelDelete()">Cancel</button>
+                        </span>
+                      } @else {
+                        <button
+                          class="btn btn--danger-subtle btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === app.id"
+                          (click)="requestDelete(app.id)"
+                        >
+                          Delete
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
 </div>

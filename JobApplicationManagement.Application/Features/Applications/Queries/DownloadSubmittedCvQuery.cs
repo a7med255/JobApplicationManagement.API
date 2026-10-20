@@ -13,11 +13,16 @@ public class DownloadSubmittedCvQueryHandler : IRequestHandler<DownloadSubmitted
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IFileStorageService _fileStorage;
 
-    public DownloadSubmittedCvQueryHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+    public DownloadSubmittedCvQueryHandler(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService,
+        IFileStorageService fileStorage)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _fileStorage = fileStorage;
     }
 
     public async Task<FileDownloadDto> Handle(
@@ -48,8 +53,18 @@ public class DownloadSubmittedCvQueryHandler : IRequestHandler<DownloadSubmitted
         if (!authorized)
             throw new ForbiddenException("You do not have permission to download this submitted CV.");
 
+        var content = application.SubmittedCv.Content;
+        if (content is null && !string.IsNullOrWhiteSpace(application.SubmittedCv.StorageKey))
+            content = await _fileStorage.DownloadPrivateAsync(
+                application.SubmittedCv.StorageKey,
+                application.SubmittedCv.ResourceType,
+                application.SubmittedCv.DeliveryType,
+                cancellationToken);
+        if (content is null)
+            throw new NotFoundException(nameof(CandidateCv), application.SubmittedCv.Id);
+
         return new FileDownloadDto(
-            application.SubmittedCv.Content,
+            content,
             application.SubmittedCv.ContentType,
             application.SubmittedCv.OriginalFileName);
     }

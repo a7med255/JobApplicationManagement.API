@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using JobApplicationManagement.Application.Common.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobApplicationManagement.API.Middleware;
 
@@ -41,6 +42,28 @@ public class ExceptionHandlingMiddleware
                 errors: ex.Errors,
                 traceId: context.TraceIdentifier);
         }
+        catch (UnauthorizedException ex)
+        {
+            _logger.LogWarning("Authentication failure: {Message}", ex.Message);
+
+            await WriteErrorResponseAsync(
+                context,
+                statusCode: StatusCodes.Status401Unauthorized,
+                message: ex.Message,
+                errors: null,
+                traceId: context.TraceIdentifier);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access: {Message}", ex.Message);
+
+            await WriteErrorResponseAsync(
+                context,
+                statusCode: StatusCodes.Status401Unauthorized,
+                message: ex.Message,
+                errors: null,
+                traceId: context.TraceIdentifier);
+        }
         catch (NotFoundException ex)
         {
             _logger.LogWarning("Resource not found: {Message}", ex.Message);
@@ -74,19 +97,27 @@ public class ExceptionHandlingMiddleware
                 errors: null,
                 traceId: context.TraceIdentifier);
         }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogWarning(ex, "A database constraint rejected the requested operation.");
+            await WriteErrorResponseAsync(
+                context,
+                statusCode: StatusCodes.Status409Conflict,
+                message: "The requested operation conflicts with existing data.",
+                errors: null,
+                traceId: context.TraceIdentifier);
+        }
         catch (Exception ex)
         {
             var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = context.User?.FindFirstValue(ClaimTypes.Email);
 
             _logger.LogError(
                 ex,
-                "An unexpected error occurred while processing {Method} {Path} [TraceId: {TraceId}, UserId: {UserId}, UserEmail: {UserEmail}]",
+                "An unexpected error occurred while processing {Method} {Path} [TraceId: {TraceId}, UserId: {UserId}]",
                 context.Request.Method,
                 context.Request.Path,
                 context.TraceIdentifier,
-                userId ?? "Anonymous",
-                userEmail ?? "N/A");
+                userId ?? "Anonymous");
 
             await WriteErrorResponseAsync(
                 context,
@@ -104,6 +135,11 @@ public class ExceptionHandlingMiddleware
         IDictionary<string, string[]>? errors,
         string traceId)
     {
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 

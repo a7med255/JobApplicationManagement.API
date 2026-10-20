@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using JobApplicationManagement.Application.Common.Interfaces;
-using JobApplicationManagement.Application.Common.Models;
+using JobApplicationManagement.Application.Features.Candidates.Commands;
 using JobApplicationManagement.Application.Features.Candidates.DTOs;
-using JobApplicationManagement.Application.Features.Candidates.Interfaces;
+using JobApplicationManagement.Application.Features.Candidates.Queries;
+using MediatR;
+using JobApplicationManagement.Application.Common.Models;
+using JobApplicationManagement.API.Models;
 
 namespace JobApplicationManagement.API.Controllers;
 
@@ -19,13 +21,11 @@ namespace JobApplicationManagement.API.Controllers;
 [Route("api/[controller]")]
 public class CandidatesController : ControllerBase
 {
-    private readonly ICandidateService _candidateService;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IMediator _mediator;
 
-    public CandidatesController(ICandidateService candidateService, ICurrentUserService currentUserService)
+    public CandidatesController(IMediator mediator)
     {
-        _candidateService = candidateService;
-        _currentUserService = currentUserService;
+        _mediator = mediator;
     }
 
     /// <summary>
@@ -36,6 +36,7 @@ public class CandidatesController : ControllerBase
     /// Note: Candidates are typically created automatically upon registration.
     /// </remarks>
     /// <param name="createDto">Contains candidate details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created candidate profile.</returns>
     /// <response code="201">Candidate created successfully.</response>
     /// <response code="400">Validation failed.</response>
@@ -47,9 +48,9 @@ public class CandidatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> CreateCandidate([FromBody] CreateCandidateDto createDto)
+    public async Task<IActionResult> CreateCandidate([FromBody] CreateCandidateDto createDto, CancellationToken cancellationToken)
     {
-        var response = await _candidateService.CreateCandidateAsync(createDto);
+        var response = await _mediator.Send(new CreateCandidateCommand(createDto), cancellationToken);
         return CreatedAtAction(nameof(GetCandidateById), new { id = response.Id }, response);
     }
 
@@ -61,6 +62,7 @@ public class CandidatesController : ControllerBase
     /// </remarks>
     /// <param name="pageNumber">The page number. Default is 1.</param>
     /// <param name="pageSize">The number of candidates per page. Default is 10.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A paginated list of candidates.</returns>
     /// <response code="200">Paginated list returned successfully.</response>
     /// <response code="401">User is not authenticated.</response>
@@ -70,9 +72,12 @@ public class CandidatesController : ControllerBase
     [ProducesResponseType(typeof(PaginatedResult<CandidateResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetAllCandidates([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAllCandidates(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
-        var response = await _candidateService.GetAllCandidatesAsync(pageNumber, pageSize);
+        var response = await _mediator.Send(new GetAllCandidatesQuery(pageNumber, pageSize), cancellationToken);
         return Ok(response);
     }
 
@@ -83,6 +88,7 @@ public class CandidatesController : ControllerBase
     /// Requires authentication. Accessible by Administrators and the candidate who owns the profile.
     /// </remarks>
     /// <param name="id">The unique identifier of the candidate.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The detailed candidate profile.</returns>
     /// <response code="200">Candidate found.</response>
     /// <response code="401">User is not authenticated.</response>
@@ -94,9 +100,9 @@ public class CandidatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCandidateById([FromRoute] int id)
+    public async Task<IActionResult> GetCandidateById([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var response = await _candidateService.GetCandidateByIdAsync(id, _currentUserService.UserId!, _currentUserService.Roles);
+        var response = await _mediator.Send(new GetCandidateByIdQuery(id), cancellationToken);
         return Ok(response);
     }
 
@@ -106,6 +112,7 @@ public class CandidatesController : ControllerBase
     /// <remarks>
     /// Requires authentication. Accessible only by the Candidate.
     /// </remarks>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The detailed candidate profile.</returns>
     /// <response code="200">Candidate found.</response>
     /// <response code="401">User is not authenticated.</response>
@@ -117,10 +124,23 @@ public class CandidatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMyProfile()
+    public async Task<IActionResult> GetMyProfile(CancellationToken cancellationToken)
     {
-        var response = await _candidateService.GetMyProfileAsync(_currentUserService.UserId!);
+        var response = await _mediator.Send(new GetMyCandidateProfileQuery(), cancellationToken);
         return Ok(response);
+    }
+
+    [HttpPost("mine/profile-image")]
+    [Authorize(Roles = "Candidate")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<CandidateResponseDto>> UploadMyProfileImage(
+        [FromForm] UploadImageRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var stream = new MemoryStream();
+        await request.File.CopyToAsync(stream, cancellationToken);
+        return Ok(await _mediator.Send(new UploadMyProfileImageCommand(
+            new ImageUpload(stream.ToArray(), request.File.FileName, request.File.ContentType)), cancellationToken));
     }
 
     /// <summary>
@@ -131,6 +151,7 @@ public class CandidatesController : ControllerBase
     /// </remarks>
     /// <param name="id">The unique identifier of the candidate.</param>
     /// <param name="updateDto">Contains updated candidate details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated candidate profile.</returns>
     /// <response code="200">Candidate updated successfully.</response>
     /// <response code="400">Validation failed.</response>
@@ -144,9 +165,12 @@ public class CandidatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateCandidate([FromRoute] int id, [FromBody] UpdateCandidateDto updateDto)
+    public async Task<IActionResult> UpdateCandidate(
+        [FromRoute] int id,
+        [FromBody] UpdateCandidateDto updateDto,
+        CancellationToken cancellationToken)
     {
-        var response = await _candidateService.UpdateCandidateAsync(id, updateDto, _currentUserService.UserId!, _currentUserService.Roles);
+        var response = await _mediator.Send(new UpdateCandidateProfileCommand(id, updateDto), cancellationToken);
         return Ok(response);
     }
 
@@ -157,6 +181,7 @@ public class CandidatesController : ControllerBase
     /// Requires authentication. Accessible by Administrators and the candidate who owns the profile.
     /// </remarks>
     /// <param name="id">The unique identifier of the candidate.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content on success.</returns>
     /// <response code="204">Candidate deleted successfully.</response>
     /// <response code="401">User is not authenticated.</response>
@@ -168,9 +193,9 @@ public class CandidatesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteCandidate([FromRoute] int id)
+    public async Task<IActionResult> DeleteCandidate([FromRoute] int id, CancellationToken cancellationToken)
     {
-        await _candidateService.DeleteCandidateAsync(id, _currentUserService.UserId!, _currentUserService.Roles);
+        await _mediator.Send(new DeleteCandidateProfileCommand(id), cancellationToken);
         return NoContent();
     }
 }

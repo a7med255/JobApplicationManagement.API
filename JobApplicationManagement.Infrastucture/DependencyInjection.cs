@@ -9,6 +9,9 @@ using JobApplicationManagement.Application.Common.Interfaces;
 using JobApplicationManagement.Infrastructure.Identity;
 using JobApplicationManagement.Infrastructure.Persistence;
 using JobApplicationManagement.Infrastructure.UnitOfWork;
+using JobApplicationManagement.Infrastructure.Storage;
+using JobApplicationManagement.Infrastructure.Email;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace JobApplicationManagement.Infrastructure;
 
@@ -74,6 +77,23 @@ public static class DependencyInjection
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+        services.Configure<CloudinaryOptions>(configuration.GetSection(CloudinaryOptions.SectionName));
+        services.AddHttpClient<IFileStorageService, CloudinaryFileStorageService>();
+
+        var dataProtection = services.AddDataProtection().SetApplicationName("Careerly");
+        var keysPath = configuration["DataProtection:KeysPath"];
+        if (!string.IsNullOrWhiteSpace(keysPath))
+        {
+            var absoluteKeysPath = Path.GetFullPath(keysPath);
+            Directory.CreateDirectory(absoluteKeysPath);
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(absoluteKeysPath));
+        }
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddScoped<IEmailQueue, ProtectedEmailQueue>();
+        services.AddScoped<IOutboxProcessor, OutboxProcessor>();
+        services.AddScoped<EmailTemplateRenderer>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         return services;
     }

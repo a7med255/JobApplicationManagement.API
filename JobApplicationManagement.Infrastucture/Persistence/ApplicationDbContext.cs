@@ -27,6 +27,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<JobSkill> JobSkills => Set<JobSkill>();
     public DbSet<CandidateCv> CandidateCvs => Set<CandidateCv>();
+    public DbSet<ApplicationStatusHistory> ApplicationStatusHistory => Set<ApplicationStatusHistory>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Interview> Interviews => Set<Interview>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<JobAlert> JobAlerts => Set<JobAlert>();
+    public DbSet<AccountOneTimeCode> AccountOneTimeCodes => Set<AccountOneTimeCode>();
+    public DbSet<AdminAuditLog> AdminAuditLogs => Set<AdminAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

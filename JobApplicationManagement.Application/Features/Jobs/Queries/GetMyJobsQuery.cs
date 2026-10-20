@@ -25,6 +25,9 @@ public class GetMyJobsQueryHandler : IRequestHandler<GetMyJobsQuery, PaginatedRe
         GetMyJobsQuery request,
         CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsAuthenticated || string.IsNullOrWhiteSpace(_currentUserService.UserId))
+            throw new UnauthorizedException("Authentication is required to view your jobs.");
+
         var recruiterId = await _unitOfWork.Recruiters.Query()
             .Where(recruiter => recruiter.UserId == _currentUserService.UserId)
             .Select(recruiter => (int?)recruiter.Id)

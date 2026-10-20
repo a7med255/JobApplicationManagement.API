@@ -23,6 +23,9 @@ public class CreateJobCommandHandler : IRequestHandler<CreateJobCommand, JobResp
 
     public async Task<JobResponseDto> Handle(CreateJobCommand request, CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsAuthenticated || string.IsNullOrWhiteSpace(_currentUserService.UserId))
+            throw new UnauthorizedException("Authentication is required to create a job.");
+
         var recruiter = await _unitOfWork.Recruiters.Query()
             .Include(r => r.Company)
             .FirstOrDefaultAsync(r => r.UserId == _currentUserService.UserId, cancellationToken);

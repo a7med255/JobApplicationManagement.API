@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CompaniesService } from '../../../core/services/companies.service';
 import { ApiErrorService } from '../../../core/services/api-error.service';
+import { APP_CONFIG } from '../../../core/config/app.constants';
 
 @Component({
   selector: 'app-recruiter-company',
@@ -22,6 +23,10 @@ export class RecruiterCompanyComponent implements OnInit {
   protected readonly isSaving = signal(false);
   protected readonly message = signal<string | null>(null);
   protected readonly isError = signal(false);
+  protected readonly isUploadingLogo = signal(false);
+  protected readonly logoUrl = signal<string | null>(null);
+  protected readonly hasCompany = signal(false);
+  protected readonly maximumImageMegabytes = APP_CONFIG.maximumImageBytes / 1024 / 1024;
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
     logoUrl: ['', Validators.maxLength(2000)],
@@ -36,7 +41,10 @@ export class RecruiterCompanyComponent implements OnInit {
 
   ngOnInit(): void {
     this.companiesService.getMine().pipe(finalize(() => this.isLoading.set(false))).subscribe({
-      next: (company) => this.form.patchValue({
+      next: (company) => {
+        this.hasCompany.set(true);
+        this.logoUrl.set(company.logoUrl);
+        this.form.patchValue({
         name: company.name,
         logoUrl: company.logoUrl ?? '',
         description: company.description ?? '',
@@ -46,7 +54,8 @@ export class RecruiterCompanyComponent implements OnInit {
         headquarters: company.headquarters ?? '',
         country: company.country ?? '',
         city: company.city ?? '',
-      }),
+        });
+      },
       error: (error: unknown) => {
         // A recruiter without a company receives 404 and can create it with this same form.
         const message = this.apiError.getMessage(error, 'Enter your company information to continue.');
@@ -68,8 +77,22 @@ export class RecruiterCompanyComponent implements OnInit {
     this.companiesService.updateMine(this.form.getRawValue())
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
-        next: () => { this.isError.set(false); this.message.set('Company profile saved. You can now create job postings.'); },
+        next: (company) => { this.hasCompany.set(true); this.logoUrl.set(company.logoUrl); this.isError.set(false); this.message.set('Company profile saved. You can now create job postings.'); },
         error: (error: unknown) => { this.isError.set(true); this.message.set(this.apiError.getMessage(error, 'Company profile could not be saved.')); },
       });
+  }
+
+  uploadLogo(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    if (!this.hasCompany()) { this.isError.set(true); this.message.set('Save the company profile before uploading its logo.'); return; }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size === 0 || file.size > APP_CONFIG.maximumImageBytes) {
+      this.isError.set(true); this.message.set(`Choose a non-empty JPEG, PNG, or WebP image no larger than ${this.maximumImageMegabytes} MB.`); return;
+    }
+    this.isUploadingLogo.set(true); this.message.set(null);
+    this.companiesService.uploadLogo(file).pipe(finalize(() => this.isUploadingLogo.set(false))).subscribe({
+      next: (company) => { this.logoUrl.set(company.logoUrl); this.form.controls.logoUrl.setValue(company.logoUrl ?? ''); this.isError.set(false); this.message.set('Company logo updated.'); },
+      error: (error: unknown) => { this.isError.set(true); this.message.set(this.apiError.getMessage(error, 'Company logo could not be uploaded.')); },
+    });
   }
 }

@@ -45,5 +45,6 @@ public class JobApplicationConfiguration : IEntityTypeConfiguration<JobApplicati
             .IsRequired();
 
         builder.Property(ja => ja.CancelledAt);
+        builder.Property(ja => ja.CoverLetter).HasMaxLength(5000);
     }
 }

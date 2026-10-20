@@ -28,11 +28,28 @@ public interface IUnitOfWork : IDisposable
 
     IGenericRepository<CandidateCv> CandidateCvs { get; }
 
-    INotificationService NotificationService { get; }
+    IGenericRepository<ApplicationStatusHistory> ApplicationStatusHistory { get; }
+
+    IGenericRepository<Notification> Notifications { get; }
+
+    IGenericRepository<Interview> Interviews { get; }
+
+    IGenericRepository<OutboxMessage> OutboxMessages { get; }
+
+    IGenericRepository<NotificationPreference> NotificationPreferences { get; }
+
+    IGenericRepository<JobAlert> JobAlerts { get; }
+    IGenericRepository<AdminAuditLog> AdminAuditLogs { get; }
 
     /// <summary>
     /// Persists all pending changes to the database within a single transaction.
     /// Returns the number of state entries written.
     /// </summary>
     Task<int> SaveChangesAsync();
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
+    Task ExecuteInTransactionAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default);
 }

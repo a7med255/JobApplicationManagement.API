@@ -36,4 +36,10 @@ public class JobApplication
     /// UTC timestamp when this application was cancelled. Null if not cancelled.
     /// </summary>
     public DateTime? CancelledAt { get; set; }
+
+    public string? CoverLetter { get; set; }
+
+    public ICollection<ApplicationStatusHistory> StatusHistory { get; set; } = new List<ApplicationStatusHistory>();
+
+    public ICollection<Interview> Interviews { get; set; } = new List<Interview>();
 }

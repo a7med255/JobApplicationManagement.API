@@ -6,9 +6,12 @@ import { RecruiterResponse } from '../../../core/models/recruiter.models';
 import { ApiErrorService } from '../../../core/services/api-error.service';
 import { RecruitersService } from '../../../core/services/recruiters.service';
 
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+
 @Component({
   selector: 'app-admin-recruiters',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, EmptyStateComponent, PaginationComponent],
   templateUrl: './admin-recruiters.component.html',
   styleUrl: './admin-recruiters.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,6 +121,15 @@ export class AdminRecruitersComponent implements OnInit {
           this.actionError.set(this.apiError.getMessage(error, 'Failed to delete the recruiter profile.'));
         },
       });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId.set(null);
+  }
+
+  onPageChange(page: number): void {
+    this.pageNumber.set(page);
+    this.loadRecruiters();
   }
 
   previousPage(): void {

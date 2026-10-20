@@ -13,6 +13,13 @@ describe('CandidatesService', () => {
     name: 'Taylor Morgan',
     cvUrl: 'https://example.test/cv',
     userId: 'identity-user-4',
+    profileImageUrl: null,
+    professionalTitle: null,
+    summary: null,
+    country: null,
+    city: null,
+    yearsOfExperience: null,
+    profileCompleteness: 25,
   };
 
   beforeEach(() => {
@@ -39,7 +46,10 @@ describe('CandidatesService', () => {
   });
 
   it('updates only editable candidate profile fields', () => {
-    const body = { name: 'Updated Candidate', cvUrl: 'https://example.test/new-cv' };
+    const body = {
+      name: 'Updated Candidate', cvUrl: 'https://example.test/new-cv', professionalTitle: null,
+      summary: null, country: null, city: null, yearsOfExperience: null,
+    };
     service.update(candidate.id, body).subscribe();
 
     const request = httpTesting.expectOne('/api/Candidates/4');

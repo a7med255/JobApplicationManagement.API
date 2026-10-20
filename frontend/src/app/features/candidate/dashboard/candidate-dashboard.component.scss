@@ -1,44 +1,281 @@
-.stat-card--hoverable {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    border-color: var(--color-primary-light);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+.candidate-dashboard {
+  padding-top: 1.5rem;
+  padding-bottom: 3.5rem;
+}
+
+.dashboard-top-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
   }
 }
 
-.dashboard-actions {
+.metrics-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.dashboard-action-card {
+.profile-completion-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 2rem;
-  
-  h3 {
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 0.5rem;
   }
-  
-  p {
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+  }
+
+  &__percentage {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--color-primary);
+  }
+
+  &__hint {
+    font-size: 0.8125rem;
     color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    margin: 0.625rem 0 0.875rem;
+  }
+
+  &__links {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
   }
 }
 
-.action-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
 }
 
-.mt-auto {
-  margin-top: auto;
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+  transition: width 0.3s ease;
 }
+
+.dashboard-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.widget-card {
+  padding: 1.5rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.875rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.widget-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+
+  &__icon {
+    font-size: 2.25rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  &__text {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  &__sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    display: block;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+}
+
+// ── Upcoming Interview Cards ────────────────────────────────────────────────
+.interview-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.candidate-interview-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--color-primary-soft);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__role {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  &__company {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+
+  &__loc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    flex-shrink: 0;
+
+    @media (max-width: 600px) {
+      flex-direction: row;
+      width: 100%;
+
+      .btn {
+        flex: 1;
+      }
+    }
+  }
+}
+
+// ── Recent Applications List ────────────────────────────────────────────────
+.recent-apps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.candidate-app-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
+  }
+
+  &__company {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+  }
+}
+
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 2.5rem; }
+.mb-4 { margin-bottom: 1.5rem; }

@@ -4,4 +4,5 @@ public class CreateJobApplicationDto
 {
     public int JobId { get; set; }
     public int? CandidateCvId { get; set; }
+    public string? CoverLetter { get; set; }
 }

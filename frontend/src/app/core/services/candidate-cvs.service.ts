@@ -25,6 +25,10 @@ export class CandidateCvsService {
     return this.http.put<CandidateCv>(`${this.apiUrl}/${id}/default`, {});
   }
 
+  rename(id: number, displayName: string): Observable<CandidateCv> {
+    return this.http.put<CandidateCv>(`${this.apiUrl}/${id}/name`, { displayName });
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }

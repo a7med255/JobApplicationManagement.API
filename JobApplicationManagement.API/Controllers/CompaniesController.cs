@@ -4,6 +4,8 @@ using JobApplicationManagement.Application.Features.Companies.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using JobApplicationManagement.Application.Common.Models;
+using JobApplicationManagement.API.Models;
 
 namespace JobApplicationManagement.API.Controllers;
 
@@ -27,4 +29,16 @@ public class CompaniesController : ControllerBase
         [FromBody] UpdateCompanyDto company,
         CancellationToken cancellationToken) =>
         Ok(await _mediator.Send(new UpsertMyCompanyCommand(company), cancellationToken));
+
+    [HttpPost("mine/logo")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<CompanyResponseDto>> UploadLogo(
+        [FromForm] UploadImageRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var stream = new MemoryStream();
+        await request.File.CopyToAsync(stream, cancellationToken);
+        return Ok(await _mediator.Send(new UploadMyCompanyLogoCommand(
+            new ImageUpload(stream.ToArray(), request.File.FileName, request.File.ContentType)), cancellationToken));
+    }
 }

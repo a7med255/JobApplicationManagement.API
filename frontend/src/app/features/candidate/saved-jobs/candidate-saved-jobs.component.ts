@@ -1,11 +1,11 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { ChangeDetectionStrategy } from '@angular/core';
-import { JobCardData } from '../../../shared/components/job-card/job-card.component';
-import { SavedJobsService } from '../../../core/services/saved-jobs.service';
-import { JobCardComponent } from '../../../shared/components/job-card/job-card.component';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { JobCardData, JobCardComponent } from '../../../shared/components/job-card/job-card.component';
+import { SavedJobsService } from '../../../core/services/saved-jobs.service';
 import { ApiErrorService } from '../../../core/services/api-error.service';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 interface SavedJobView {
   savedJobId: number;
@@ -15,7 +15,7 @@ interface SavedJobView {
 @Component({
   selector: 'app-candidate-saved-jobs',
   standalone: true,
-  imports: [JobCardComponent],
+  imports: [RouterLink, JobCardComponent, PaginationComponent, EmptyStateComponent],
   templateUrl: './candidate-saved-jobs.component.html',
   styleUrl: './candidate-saved-jobs.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +34,7 @@ export class CandidateSavedJobsComponent implements OnInit {
   
   protected readonly pageNumber = signal(1);
   protected readonly totalPages = signal(1);
+  protected readonly totalItems = signal(0);
   protected readonly pageSize = 12;
 
   ngOnInit(): void {
@@ -43,7 +44,6 @@ export class CandidateSavedJobsComponent implements OnInit {
   loadSavedJobs(): void {
     this.isLoading.set(true);
     this.isError.set(false);
-
     this.errorMessage.set('');
 
     this.savedJobsService
@@ -63,6 +63,7 @@ export class CandidateSavedJobsComponent implements OnInit {
             })),
           );
           this.totalPages.set(res.totalPages);
+          this.totalItems.set(res.totalCount);
         },
         error: (error: unknown) => {
           this.isError.set(true);
@@ -73,18 +74,10 @@ export class CandidateSavedJobsComponent implements OnInit {
       });
   }
 
-  nextPage(): void {
-    if (this.pageNumber() < this.totalPages()) {
-      this.pageNumber.update(p => p + 1);
-      this.loadSavedJobs();
-    }
-  }
-
-  prevPage(): void {
-    if (this.pageNumber() > 1) {
-      this.pageNumber.update(p => p - 1);
-      this.loadSavedJobs();
-    }
+  onPageChange(page: number): void {
+    this.pageNumber.set(page);
+    this.loadSavedJobs();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   onApply(jobId: number): void {

@@ -8,6 +8,7 @@ import {
   AuthUser,
   AppRole,
   LoginRequest,
+  MessageResponse,
   RegisterRequest,
   RefreshTokenRequest,
   VerifyEmailRequest,
@@ -48,20 +49,20 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request);
   }
 
-  verifyEmail(request: VerifyEmailRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/verify-email`, request);
+  verifyEmail(request: VerifyEmailRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/verify-email`, request);
   }
 
-  resendVerification(request: ForgotPasswordRequest): Observable<{ message: string; otp: string }> {
-    return this.http.post<{ message: string; otp: string }>(`${this.apiUrl}/resend-verification`, request);
+  resendVerification(request: ForgotPasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/resend-verification`, request);
   }
 
-  forgotPassword(request: ForgotPasswordRequest): Observable<{ message: string; otp: string }> {
-    return this.http.post<{ message: string; otp: string }>(`${this.apiUrl}/forgot-password`, request);
+  forgotPassword(request: ForgotPasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/forgot-password`, request);
   }
 
-  resetPassword(request: ResetPasswordRequest): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, request);
+  resetPassword(request: ResetPasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/reset-password`, request);
   }
 
   externalLogin(request: ExternalLoginRequest): Observable<AuthResponse> {
@@ -91,8 +92,15 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = this.userSignal()?.refreshToken;
     this.clearSession();
     void this.router.navigate(['/login']);
+    if (!refreshToken) {
+      return;
+    }
+    this.http.post<void>(`${this.apiUrl}/logout`, { refreshToken }).subscribe({
+      error: () => { /* Local logout remains complete even if server revocation is unavailable. */ },
+    });
   }
 
   // ── Token access ────────────────────────────────────────────────────────────

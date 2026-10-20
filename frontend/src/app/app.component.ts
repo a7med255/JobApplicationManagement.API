@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './layout/navbar/navbar.component';
+import { FooterComponent } from './layout/footer/footer.component';
 
 @Component({
-  imports: [RouterOutlet, NavbarComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent],
   selector: 'app-root',
   template: `
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -11,6 +12,7 @@ import { NavbarComponent } from './layout/navbar/navbar.component';
     <main id="main-content" class="app-main" tabindex="-1">
       <router-outlet />
     </main>
+    <app-footer />
   `,
   styles: `
     .skip-link {
@@ -21,8 +23,9 @@ import { NavbarComponent } from './layout/navbar/navbar.component';
       padding: 0.625rem 1rem;
       border-radius: var(--radius-sm);
       background: var(--text-primary);
-      color: var(--bg-body);
+      color: #ffffff;
       transform: translateY(-150%);
+      transition: transform 0.2s ease;
     }
 
     .skip-link:focus {
@@ -30,7 +33,9 @@ import { NavbarComponent } from './layout/navbar/navbar.component';
     }
 
     .app-main {
-      min-height: calc(100vh - 64px);
+      min-height: calc(100vh - var(--header-height));
+      display: flex;
+      flex-direction: column;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

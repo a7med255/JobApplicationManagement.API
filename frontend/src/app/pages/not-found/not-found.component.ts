@@ -26,10 +26,7 @@ import { RouterLink } from '@angular/router';
       &__code {
         font-size: 6rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--color-primary);
         line-height: 1;
         margin-bottom: 1rem;
       }

@@ -1,79 +1,225 @@
-<div class="container">
-  <div class="page-header">
-    <a routerLink="/recruiter/dashboard" class="back-link">&larr; Back to Dashboard</a>
-    <h1 class="page-header__title mt-3">Candidate Applications</h1>
-    <p class="page-header__subtitle">{{ totalCount() }} application{{ totalCount() === 1 ? '' : 's' }}</p>
-  </div>
-
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading applications...</div>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="error-state">
-      <div class="error-state__icon">⚠️</div>
-      <h3 class="error-state__title">{{ errorMessage() }}</h3>
-      <button class="btn btn--secondary" (click)="loadApplications()">Retry</button>
-    </div>
-  } @else if (applications().length === 0) {
-    <div class="empty-state">
-      <div class="empty-state__icon">👥</div>
-      <h3 class="empty-state__title">No applications yet</h3>
-      <p class="empty-state__message">Once candidates apply to your jobs, they will appear here.</p>
-    </div>
-  } @else {
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Candidate ID</th>
-            <th>Job ID</th>
-            <th>Applied On</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (app of applications(); track app.id) {
-            <tr>
-              <td>Candidate #{{ app.candidateId }}</td>
-              <td>
-                <a [routerLink]="['/jobs', app.jobId]" class="job-link">Job #{{ app.jobId }}</a>
-              </td>
-              <td>{{ app.appliedAt | date:'mediumDate' }}</td>
-              <td>
-                <app-application-status-badge [status]="app.jobApplicationStatus" />
-              </td>
-              <td>
-                <a [routerLink]="['/recruiter/applications', app.id]" class="btn btn--secondary btn--sm">
-                  Review
-                </a>
-              </td>
-            </tr>
+<div class="recruiter-apps-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/recruiter/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">
+          Applicant Tracking
+          @if (!isLoading() && totalCount() > 0) {
+            <span class="count-badge">{{ totalCount() }}</span>
           }
-        </tbody>
-      </table>
+        </h1>
+        <p class="page-subtitle">Screen candidates, review resumes, update hiring stages, and schedule interviews.</p>
+      </div>
     </div>
 
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button 
-          class="btn btn--secondary btn--sm" 
-          [disabled]="pageNumber() === 1"
-          aria-label="Go to previous applications page"
-          (click)="prevPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button 
-          class="btn btn--secondary btn--sm" 
-          [disabled]="pageNumber() === totalPages()"
-          aria-label="Go to next applications page"
-          (click)="nextPage()">
-          Next
-        </button>
+    @if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="loadApplications()">Retry</button>
       </div>
     }
-  }
+
+    <!-- Toolbar: Tabs + Search -->
+    @if (!isLoading() && applications().length > 0) {
+      <div class="toolbar-card mb-4">
+        <div class="filter-tabs" role="tablist">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'all'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'all'"
+            (click)="setTab('all')"
+          >
+            All <span>({{ countByTab('all') }})</span>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'applied'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'applied'"
+            (click)="setTab('applied')"
+          >
+            New <span>({{ countByTab('applied') }})</span>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'under_review'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'under_review'"
+            (click)="setTab('under_review')"
+          >
+            Under Review <span>({{ countByTab('under_review') }})</span>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'shortlisted'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'shortlisted'"
+            (click)="setTab('shortlisted')"
+          >
+            Shortlisted <span>({{ countByTab('shortlisted') }})</span>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'interview'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'interview'"
+            (click)="setTab('interview')"
+          >
+            Interview <span>({{ countByTab('interview') }})</span>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'accepted'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'accepted'"
+            (click)="setTab('accepted')"
+          >
+            Accepted <span>({{ countByTab('accepted') }})</span>
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'rejected'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'rejected'"
+            (click)="setTab('rejected')"
+          >
+            Rejected <span>({{ countByTab('rejected') }})</span>
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            aria-label="Search applications on this page"
+            class="search-input"
+            placeholder="Search candidate or job..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+          @if (searchQuery()) {
+            <button type="button" class="clear-search" (click)="searchQuery.set('')" aria-label="Clear search">
+              &times;
+            </button>
+          }
+        </div>
+        <p class="toolbar-note">Status counts and search apply to this page of results.</p>
+      </div>
+    }
+
+    <!-- Content Area -->
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading candidate applications...</p>
+      </div>
+    } @else if (applications().length === 0) {
+      <app-empty-state
+        icon=""
+        title="No applications received yet"
+        message="Once candidates apply for your open job requisitions, their profiles, resumes, and cover letters will appear here."
+      />
+    } @else if (filteredApplications().length === 0) {
+      <div class="card empty-filter">
+        <h3>No applications match this filter</h3>
+        <p>Try clearing your search query or selecting a different status tab.</p>
+        <button type="button" class="btn btn--outline btn--sm" (click)="selectedTab.set('all'); searchQuery.set('')">
+          Reset Filter
+        </button>
+      </div>
+    } @else {
+      <div class="table-card card">
+        <div class="table-responsive">
+          <table class="apps-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Target Job</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (app of filteredApplications(); track app.id) {
+                <tr>
+                  <td>
+                    <div class="candidate-col">
+                      <div class="candidate-avatar">
+                        {{ (app.candidateName || 'C')[0] }}
+                      </div>
+                      <div class="candidate-info">
+                        <strong class="candidate-name">
+                          <a [routerLink]="['/recruiter/applications', app.id]">
+                            {{ app.candidateName || ('Candidate #' + app.candidateId) }}
+                          </a>
+                        </strong>
+                        @if (app.submittedCvDisplayName) {
+                          <span class="cv-badge">
+                            CV: {{ app.submittedCvDisplayName }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="job-col">
+                      <a [routerLink]="['/jobs', app.jobId]" class="job-link" target="_blank" title="Preview job posting">
+                        {{ app.jobTitle || ('Job #' + app.jobId) }}
+                      </a>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="applied-date">{{ app.appliedAt | date:'mediumDate' }}</span>
+                  </td>
+                  <td>
+                    <app-status-badge [status]="app.jobApplicationStatus" type="application" />
+                  </td>
+                  <td class="text-right">
+                    <a [routerLink]="['/recruiter/applications', app.id]" class="btn btn--primary btn--sm">
+                      Review Candidate
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
 </div>

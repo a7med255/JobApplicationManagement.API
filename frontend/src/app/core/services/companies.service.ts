@@ -16,4 +16,10 @@ export class CompaniesService {
   updateMine(request: UpdateCompanyRequest): Observable<Company> {
     return this.http.put<Company>(this.apiUrl, request);
   }
+
+  uploadLogo(file: File): Observable<Company> {
+    const data = new FormData();
+    data.append('file', file, file.name);
+    return this.http.post<Company>(`${this.apiUrl}/logo`, data);
+  }
 }

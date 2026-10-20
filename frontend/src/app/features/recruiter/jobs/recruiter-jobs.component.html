@@ -1,31 +1,289 @@
-<div class="container recruiter-jobs">
-  <div class="page-header"><div><a routerLink="/recruiter/dashboard" class="back-link">&larr; Back to dashboard</a><h1 class="page-header__title mt-3">My jobs</h1></div><a routerLink="/recruiter/jobs/create" class="btn btn--primary">Create job</a></div>
-  @if (errorMessage()) { <div class="alert alert--danger" role="alert">{{ errorMessage() }}</div> }
-  @if (isLoading()) { <div class="loading"><div class="loading__spinner"></div><div class="loading__text">Loading jobs...</div></div> }
-  @else if (jobs().length === 0) { <div class="empty-state"><h2 class="empty-state__title">No jobs yet</h2><p class="empty-state__message">Create your first job posting after completing your company profile.</p></div> }
-  @else {
-    <div class="table-container"><table><thead><tr><th>Job</th><th>Status</th><th>Posted / deadline</th><th>Actions</th></tr></thead><tbody>
-      @for (job of jobs(); track job.id) {
-        <tr>
-          <td><strong>{{ job.title }}</strong><div class="muted">{{ job.city }}, {{ job.country }}</div></td>
-          <td><span class="badge" [class.badge--active]="job.status === JobStatus.Published" [class.badge--closed]="job.status !== JobStatus.Published">{{ statusLabels[job.status] }}</span></td>
-          <td><div>{{ job.postedAt ? (job.postedAt | date:'mediumDate') : 'Not published' }}</div><div class="muted">Deadline: {{ job.applicationDeadline ? (job.applicationDeadline | date:'mediumDate') : 'Open' }}</div></td>
-          <td><div class="actions">
-            <a [routerLink]="['/jobs', job.id]" class="btn btn--secondary btn--sm">View</a>
-            @if (job.status !== JobStatus.Archived) { <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="btn btn--secondary btn--sm">Edit</a> }
-            @if (job.status === JobStatus.Draft) {
-              <button class="btn btn--primary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="publish(job.id)">Publish</button>
-              <button class="btn btn--danger btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="delete(job.id)">Delete</button>
-            } @else if (job.status === JobStatus.Published) {
-              <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="close(job.id)">Close</button>
-            } @else if (job.status === JobStatus.Closed || job.status === JobStatus.Expired) {
-              <button class="btn btn--primary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="reopen(job.id)">Reopen</button>
-              <button class="btn btn--secondary btn--sm" type="button" [disabled]="pendingId() === job.id" (click)="archive(job.id)">Archive</button>
+<div class="recruiter-jobs-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/recruiter/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">
+          My Job Postings
+          @if (!isLoading() && totalCount() > 0) {
+            <span class="count-badge">{{ totalCount() }}</span>
+          }
+        </h1>
+        <p class="page-subtitle">Publish new roles, monitor deadlines, and control the lifecycle of your company's requisitions.</p>
+      </div>
+
+      <div class="header-actions">
+        <a routerLink="/recruiter/jobs/create" class="btn btn--primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Post New Job</span>
+        </a>
+      </div>
+    </div>
+
+    @if (successMessage()) {
+      <div class="alert alert--success mb-4" role="status">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>{{ successMessage() }}</span>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Toolbar -->
+    @if (!isLoading() && (jobs().length > 0 || selectedTab() !== 'all' || searchQuery())) {
+      <div class="toolbar-card mb-4">
+        <div class="filter-tabs" role="tablist">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'all'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'all'"
+            (click)="setTab('all')"
+          >
+            All
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'published'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'published'"
+            (click)="setTab('published')"
+          >
+            Published
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'draft'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'draft'"
+            (click)="setTab('draft')"
+          >
+            Drafts
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'closed'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'closed'"
+            (click)="setTab('closed')"
+          >
+            Closed
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="selectedTab() === 'archived'"
+            role="tab"
+            [attr.aria-selected]="selectedTab() === 'archived'"
+            (click)="setTab('archived')"
+          >
+            Archived
+          </button>
+        </div>
+
+        <div class="search-box">
+          <div class="search-input-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              class="search-input"
+              aria-label="Search all job postings"
+              placeholder="Search by title or location..."
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              (keydown.enter)="applySearch()"
+            />
+            @if (searchQuery()) {
+              <button type="button" class="clear-search" (click)="clearSearch()" aria-label="Clear search">&times;</button>
             }
-          </div></td>
-        </tr>
-      }
-    </tbody></table></div>
-    @if (totalPages() > 1) { <nav class="pagination"><button class="btn btn--secondary btn--sm" (click)="previous()" [disabled]="pageNumber() === 1">Previous</button><span>Page {{ pageNumber() }} of {{ totalPages() }}</span><button class="btn btn--secondary btn--sm" (click)="next()" [disabled]="pageNumber() === totalPages()">Next</button></nav> }
-  }
+          </div>
+          <button type="button" class="btn btn--primary btn--sm search-submit" (click)="applySearch()">Search</button>
+        </div>
+      </div>
+    }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your job postings...</p>
+      </div>
+    } @else if (jobs().length === 0 && selectedTab() === 'all' && !searchQuery()) {
+      <app-empty-state
+        icon=""
+        title="No job postings created yet"
+        message="Start attracting top candidates by publishing your first job opportunity."
+        actionText="Post a New Job"
+        actionLink="/recruiter/jobs/create"
+      />
+    } @else if (jobs().length === 0) {
+      <div class="card empty-filter">
+        <h3>No jobs match this filter</h3>
+        <p>Try clearing your search query or selecting a different tab.</p>
+        <button type="button" class="btn btn--outline btn--sm" (click)="selectedTab.set('all'); searchQuery.set('')">
+          Reset Filter
+        </button>
+      </div>
+    } @else {
+      <div class="table-card card">
+        <div class="table-responsive">
+          <table class="jobs-table">
+            <thead>
+              <tr>
+                <th>Job Title & Details</th>
+                <th>Status</th>
+                <th>Timeline</th>
+                <th>Vacancies</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (job of filteredJobs(); track job.id) {
+                <tr>
+                  <td>
+                    <div class="job-title-col">
+                      <strong class="job-name">
+                        <a [routerLink]="['/jobs', job.id]" target="_blank" title="Preview public listing">
+                          {{ job.title }}
+                        </a>
+                      </strong>
+                      <div class="job-sub">
+                        <span>{{ job.category }}</span>
+                        @if (job.city || job.country) {
+                          <span class="meta-dot">&bull;</span>
+                          <span>{{ job.city ? job.city + ', ' : '' }}{{ job.country }}</span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <app-status-badge [status]="job.status" type="job" />
+                  </td>
+                  <td>
+                    <div class="timeline-col">
+                      <span class="posted-date">
+                        {{ job.postedAt ? (job.postedAt | date:'mediumDate') : 'Unpublished' }}
+                      </span>
+                      <span class="deadline-date">
+                        Deadline: {{ job.applicationDeadline ? (job.applicationDeadline | date:'mediumDate') : 'Not specified' }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="vacancies-count">{{ job.numberOfVacancies }}</span>
+                  </td>
+                  <td class="text-right">
+                    <div class="actions-group">
+                      <a [routerLink]="['/jobs', job.id]" class="btn btn--outline btn--sm" title="Preview job">
+                        View
+                      </a>
+                      @if (job.status !== JobStatus.Archived) {
+                        <a [routerLink]="['/recruiter/jobs', job.id, 'edit']" class="btn btn--outline btn--sm" title="Edit job">
+                          Edit
+                        </a>
+                      }
+                      @if (job.status === JobStatus.Draft) {
+                        <button
+                          class="btn btn--primary btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="publish(job.id)"
+                        >
+                          Publish
+                        </button>
+                        <button
+                          class="btn btn--outline-danger btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="requestDelete(job)"
+                        >
+                          Delete
+                        </button>
+                      } @else if (job.status === JobStatus.Published) {
+                        <button
+                          class="btn btn--outline btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="close(job.id)"
+                        >
+                          Close
+                        </button>
+                      } @else if (job.status === JobStatus.Closed || job.status === JobStatus.Expired) {
+                        <button
+                          class="btn btn--primary btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="reopen(job.id)"
+                        >
+                          Reopen
+                        </button>
+                        <button
+                          class="btn btn--outline btn--sm"
+                          type="button"
+                          [disabled]="pendingId() === job.id"
+                          (click)="archive(job.id)"
+                        >
+                          Archive
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+
+    @if (deletingJob(); as jobToDelete) {
+      <div class="modal-backdrop" (click)="cancelDelete()">
+        <div class="delete-dialog card" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true" aria-labelledby="delete-job-title" aria-describedby="delete-job-description">
+          <h2 id="delete-job-title">Delete draft job?</h2>
+          <p id="delete-job-description">“{{ jobToDelete.title }}” will be permanently deleted. This action cannot be undone.</p>
+          <div class="delete-dialog__actions">
+            <button type="button" class="btn btn--outline" (click)="cancelDelete()">Cancel</button>
+            <button type="button" class="btn btn--danger" (click)="confirmDelete()" [disabled]="pendingId() === jobToDelete.id">Delete draft</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
 </div>

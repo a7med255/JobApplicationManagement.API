@@ -1,121 +1,284 @@
-<div class="container">
-  <div class="page-header">
-    <div>
-      <a routerLink="/admin/dashboard" class="back-link">&larr; Back to Dashboard</a>
-      <h1 class="page-header__title mt-3">Candidate Profiles</h1>
-      <p class="page-header__subtitle">{{ totalCount() }} profile{{ totalCount() === 1 ? '' : 's' }}</p>
-    </div>
-  </div>
-
-  @if (actionError()) {
-    <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
-  }
-
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading candidate profiles...</div>
-    </div>
-  } @else if (errorMessage()) {
-    <div class="error-state">
-      <h2 class="error-state__title">{{ errorMessage() }}</h2>
-      <button class="btn btn--secondary" type="button" (click)="loadCandidates()">Retry</button>
-    </div>
-  } @else if (candidates().length === 0) {
-    <div class="empty-state">
-      <h2 class="empty-state__title">No candidate profiles found</h2>
-      <p class="empty-state__message">Candidate profiles are created during candidate registration.</p>
-    </div>
-  } @else {
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Profile ID</th>
-            <th>Name</th>
-            <th>CV</th>
-            <th>Identity user ID</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (candidate of candidates(); track candidate.id) {
-            <tr>
-              <td>#{{ candidate.id }}</td>
-              <td>
-                @if (editingId() === candidate.id) {
-                  <input
-                    class="form-control table-input"
-                    [formControl]="editForm.controls.name"
-                    aria-label="Candidate name"
-                  />
-                  @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
-                    <div class="form-error">A name of at most 200 characters is required.</div>
-                  }
-                } @else {
-                  <strong>{{ candidate.name }}</strong>
-                }
-              </td>
-              <td>
-                @if (editingId() === candidate.id) {
-                  <input
-                    class="form-control table-input"
-                    type="url"
-                    [formControl]="editForm.controls.cvUrl"
-                    aria-label="Candidate CV URL"
-                  />
-                } @else if (candidate.cvUrl) {
-                  <a [href]="candidate.cvUrl" target="_blank" rel="noopener noreferrer">Open CV</a>
-                } @else {
-                  <span class="text-muted">Not provided</span>
-                }
-              </td>
-              <td><code>{{ candidate.userId }}</code></td>
-              <td>
-                <div class="action-buttons">
-                  @if (editingId() === candidate.id) {
-                    <button
-                      class="btn btn--primary btn--sm"
-                      type="button"
-                      [disabled]="pendingId() === candidate.id"
-                      (click)="saveCandidate(candidate.id)"
-                    >
-                      {{ pendingId() === candidate.id ? 'Saving...' : 'Save' }}
-                    </button>
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="cancelEdit()">Cancel</button>
-                  } @else if (confirmDeleteId() === candidate.id) {
-                    <span class="confirmation-text">Delete this profile?</span>
-                    <button
-                      class="btn btn--danger btn--sm"
-                      type="button"
-                      [disabled]="pendingId() === candidate.id"
-                      (click)="deleteCandidate(candidate.id)"
-                    >
-                      {{ pendingId() === candidate.id ? 'Deleting...' : 'Confirm' }}
-                    </button>
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="confirmDeleteId.set(null)">Cancel</button>
-                  } @else {
-                    <button class="btn btn--secondary btn--sm" type="button" (click)="startEdit(candidate)">Edit</button>
-                    <button class="btn btn--danger btn--sm" type="button" (click)="requestDelete(candidate.id)">Delete</button>
-                  }
-                </div>
-              </td>
-            </tr>
+<div class="admin-page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a routerLink="/admin/dashboard" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </a>
+        </nav>
+        <h1 class="page-title">
+          Candidate Profiles
+          @if (!isLoading() && totalCount() > 0) {
+            <span class="count-badge">{{ totalCount() }}</span>
           }
-        </tbody>
-      </table>
+        </h1>
+        <p class="page-subtitle">Directory of registered candidate accounts, resumes, and completeness status.</p>
+      </div>
     </div>
 
-    @if (totalPages() > 1) {
-      <nav class="pagination" aria-label="Candidate profile pages">
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === 1" (click)="previousPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button class="btn btn--secondary btn--sm" type="button" [disabled]="pageNumber() === totalPages()" (click)="nextPage()">
-          Next
-        </button>
-      </nav>
+    @if (actionError()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ actionError() }}</span>
+      </div>
     }
-  }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading candidate directory...</p>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn--sm btn--outline ml-auto" (click)="loadCandidates()">Retry</button>
+      </div>
+    } @else if (candidates().length === 0) {
+      <app-empty-state
+        icon=""
+        title="No candidates found"
+        message="Candidate profiles are created during candidate registration."
+      />
+    } @else {
+      <div class="table-card card">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Title & Experience</th>
+                <th>Location</th>
+                <th>Completeness</th>
+                <th>Resume / CV</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (candidate of candidates(); track candidate.id) {
+                @if (editingId() === candidate.id) {
+                  <!-- Inline Edit Mode -->
+                  <tr class="edit-row">
+                    <td colspan="6">
+                      <form [formGroup]="editForm" (ngSubmit)="saveCandidate(candidate.id)" class="edit-form-panel">
+                        <div class="edit-form-header">
+                          <strong>Editing Profile #{{ candidate.id }} ({{ candidate.name }})</strong>
+                          <span class="user-id-text">User ID: <code>{{ candidate.userId }}</code></span>
+                        </div>
+                        <div class="edit-grid">
+                          <div class="form-group">
+                            <label class="form-label" for="edit-cand-name">Full Name *</label>
+                            <input
+                              id="edit-cand-name"
+                              class="form-control"
+                              [formControl]="editForm.controls.name"
+                              placeholder="Full name"
+                            />
+                            @if (editForm.controls.name.invalid && editForm.controls.name.touched) {
+                              <span class="form-error">Name is required (max 200 chars).</span>
+                            }
+                          </div>
+
+                          <div class="form-group">
+                            <label class="form-label" for="edit-cand-title">Professional Title</label>
+                            <input
+                              id="edit-cand-title"
+                              class="form-control"
+                              [formControl]="editForm.controls.professionalTitle"
+                              placeholder="e.g. Senior Software Engineer"
+                            />
+                          </div>
+
+                          <div class="form-group">
+                            <label class="form-label" for="edit-cand-exp">Years of Experience</label>
+                            <input
+                              id="edit-cand-exp"
+                              type="number"
+                              class="form-control"
+                              [formControl]="editForm.controls.yearsOfExperience"
+                              placeholder="e.g. 5"
+                              min="0"
+                              max="60"
+                            />
+                          </div>
+
+                          <div class="form-group">
+                            <label class="form-label" for="edit-cand-city">City</label>
+                            <input
+                              id="edit-cand-city"
+                              class="form-control"
+                              [formControl]="editForm.controls.city"
+                              placeholder="e.g. Cairo"
+                            />
+                          </div>
+
+                          <div class="form-group">
+                            <label class="form-label" for="edit-cand-country">Country</label>
+                            <input
+                              id="edit-cand-country"
+                              class="form-control"
+                              [formControl]="editForm.controls.country"
+                              placeholder="e.g. Egypt"
+                            />
+                          </div>
+
+                          <div class="form-group">
+                            <label class="form-label" for="edit-cand-cv">CV / Resume URL</label>
+                            <input
+                              id="edit-cand-cv"
+                              type="url"
+                              class="form-control"
+                              [formControl]="editForm.controls.cvUrl"
+                              placeholder="https://..."
+                            />
+                          </div>
+                        </div>
+
+                        <div class="edit-actions">
+                          <button
+                            class="btn btn--primary btn--sm"
+                            type="submit"
+                            [disabled]="pendingId() === candidate.id"
+                          >
+                            {{ pendingId() === candidate.id ? 'Saving...' : 'Save Changes' }}
+                          </button>
+                          <button
+                            class="btn btn--outline btn--sm"
+                            type="button"
+                            (click)="cancelEdit()"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                } @else {
+                  <!-- Normal Read Mode -->
+                  <tr>
+                    <td>
+                      <div class="candidate-identity">
+                        <div class="candidate-avatar">
+                          @if (candidate.profileImageUrl) {
+                            <img [src]="candidate.profileImageUrl" [alt]="candidate.name" class="avatar-img" />
+                          } @else {
+                            <span class="avatar-initial">{{ candidate.name ? candidate.name[0] : 'C' }}</span>
+                          }
+                        </div>
+                        <div class="candidate-meta">
+                          <strong class="candidate-name">{{ candidate.name }}</strong>
+                          <span class="candidate-id">#{{ candidate.id }} &bull; <code>{{ candidate.userId }}</code></span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="title-cell">
+                        <span class="prof-title">{{ candidate.professionalTitle || 'No title set' }}</span>
+                        @if (candidate.yearsOfExperience !== null && candidate.yearsOfExperience !== undefined) {
+                          <span class="exp-badge">{{ candidate.yearsOfExperience }} yrs exp</span>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <span class="location-text">
+                        {{ candidate.city ? candidate.city + ', ' : '' }}{{ candidate.country || 'Not specified' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="completeness-wrapper" [title]="candidate.profileCompleteness + '% Complete'">
+                        <div class="progress-bar-bg">
+                          <div
+                            class="progress-bar-fill"
+                            [style.width.%]="candidate.profileCompleteness"
+                            [class.complete]="candidate.profileCompleteness >= 80"
+                          ></div>
+                        </div>
+                        <span class="completeness-pct">{{ candidate.profileCompleteness }}%</span>
+                      </div>
+                    </td>
+                    <td>
+                      @if (candidate.cvUrl) {
+                        <a [href]="candidate.cvUrl" target="_blank" rel="noopener noreferrer" class="cv-link">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                          </svg>
+                          <span>Open CV</span>
+                        </a>
+                      } @else {
+                        <span class="text-muted">None</span>
+                      }
+                    </td>
+                    <td class="text-right">
+                      <div class="actions-group">
+                        <button
+                          class="btn btn--outline btn--sm"
+                          type="button"
+                          (click)="startEdit(candidate)"
+                        >
+                          Edit
+                        </button>
+
+                        @if (confirmDeleteId() === candidate.id) {
+                          <span class="inline-confirm">
+                            <span>Delete?</span>
+                            <button
+                              class="btn btn--danger btn--sm"
+                              type="button"
+                              [disabled]="pendingId() === candidate.id"
+                              (click)="deleteCandidate(candidate.id)"
+                            >
+                              {{ pendingId() === candidate.id ? '...' : 'Yes' }}
+                            </button>
+                            <button
+                              class="btn btn--outline btn--sm"
+                              type="button"
+                              (click)="cancelDelete()"
+                            >
+                              No
+                            </button>
+                          </span>
+                        } @else {
+                          <button
+                            class="btn btn--danger-subtle btn--sm"
+                            type="button"
+                            [disabled]="pendingId() === candidate.id"
+                            (click)="requestDelete(candidate.id)"
+                          >
+                            Delete
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
 </div>

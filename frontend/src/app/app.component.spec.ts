@@ -19,8 +19,9 @@ describe('App', () => {
 
   it('should render the application brand', async () => {
     const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.navbar__title')?.textContent).toContain('JobPortal');
+    expect(compiled.querySelector('.navbar__brand-name')?.textContent).toContain('Careerly');
   });
 });

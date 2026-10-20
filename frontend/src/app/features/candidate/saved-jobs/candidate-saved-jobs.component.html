@@ -1,64 +1,79 @@
-<div class="container">
-  <div class="page-header">
-    <a routerLink="/candidate/dashboard" class="back-link">← Back to Dashboard</a>
-    <h1 class="page-header__title mt-3">Saved Jobs</h1>
-  </div>
+<div class="saved-jobs-page">
+  <div class="container">
+    <div class="page-header">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a routerLink="/candidate/dashboard" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Dashboard
+        </a>
+      </nav>
+      <div class="header-titles">
+        <h1 class="page-title">
+          Saved Jobs
+          @if (!isLoading() && totalItems() > 0) {
+            <span class="count-badge">{{ totalItems() }}</span>
+          }
+        </h1>
+        <p class="page-subtitle">Roles you've bookmarked to review or apply for later.</p>
+      </div>
+    </div>
 
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading saved jobs...</div>
-    </div>
-  } @else if (isError()) {
-    <div class="error-state">
-      <div class="error-state__icon">⚠️</div>
-      <h3 class="error-state__title">Failed to load saved jobs</h3>
-      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
-      <button class="btn btn--secondary" (click)="loadSavedJobs()">Retry</button>
-    </div>
-  } @else if (savedJobs().length === 0) {
-    <div class="empty-state">
-      <div class="empty-state__icon">⭐</div>
-      <h3 class="empty-state__title">No saved jobs</h3>
-      <p class="empty-state__message">You haven't saved any jobs for later.</p>
-      <a routerLink="/jobs" class="btn btn--primary">Browse Jobs</a>
-    </div>
-  } @else {
     @if (actionError()) {
-      <div class="alert alert--danger" role="alert">{{ actionError() }}</div>
-    }
-    <div class="job-grid">
-      @for (item of savedJobs(); track item.savedJobId) {
-        <app-job-card 
-          [job]="item.job" 
-          [showApply]="true"
-          [showSave]="true"
-          [isSaved]="true"
-          [isSavePending]="removingJobId() === item.job.id"
-          (apply)="onApply($event)"
-          (saveToggle)="onSaveToggle($event)">
-        </app-job-card>
-      }
-    </div>
-
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button 
-          class="btn btn--secondary btn--sm" 
-          [disabled]="pageNumber() === 1"
-          aria-label="Go to previous saved-jobs page"
-          (click)="prevPage()">
-          Previous
-        </button>
-        <span class="pagination__info">Page {{ pageNumber() }} of {{ totalPages() }}</span>
-        <button 
-          class="btn btn--secondary btn--sm" 
-          [disabled]="pageNumber() === totalPages()"
-          aria-label="Go to next saved-jobs page"
-          (click)="nextPage()">
-          Next
-        </button>
+      <div class="alert alert--danger mb-4" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ actionError() }}</span>
       </div>
     }
-  }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your saved jobs...</p>
+      </div>
+    } @else if (isError()) {
+      <div class="card error-card">
+        <h3>Failed to load saved jobs</h3>
+        <p>{{ errorMessage() }}</p>
+        <button class="btn btn--secondary" type="button" (click)="loadSavedJobs()">Try Again</button>
+      </div>
+    } @else if (savedJobs().length === 0) {
+      <app-empty-state
+        icon=""
+        title="No saved jobs yet"
+        message="Browse open positions and click the bookmark button on any job card to save it for later."
+        actionText="Explore Open Jobs"
+        actionLink="/jobs"
+      />
+    } @else {
+      <div class="jobs-grid">
+        @for (item of savedJobs(); track item.savedJobId) {
+          <app-job-card
+            [job]="item.job"
+            [showApply]="true"
+            [showSave]="true"
+            [isSaved]="true"
+            [isSavePending]="removingJobId() === item.job.id"
+            (apply)="onApply($event)"
+            (saveToggle)="onSaveToggle($event)"
+          />
+        }
+      </div>
+
+      <div class="pagination-wrapper">
+        <app-pagination
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalItems()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    }
+  </div>
 </div>

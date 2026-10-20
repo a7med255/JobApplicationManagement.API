@@ -5,4 +5,5 @@ namespace JobApplicationManagement.Application.Features.Applications.DTOs;
 public class UpdateJobApplicationDto
 {
     public JobApplicationStatus JobApplicationStatus { get; set; }
+    public string? Note { get; set; }
 }

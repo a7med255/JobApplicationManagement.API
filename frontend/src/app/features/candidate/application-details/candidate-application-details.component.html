@@ -1,93 +1,308 @@
-<div class="container app-details-container">
-  @if (isLoading()) {
-    <div class="loading">
-      <div class="loading__spinner"></div>
-      <div class="loading__text">Loading application details...</div>
-    </div>
-  } @else if (isError() || !application()) {
-    <div class="error-state">
-      <div class="error-state__icon">⚠️</div>
-      <h3 class="error-state__title">Application not found</h3>
-      <p class="error-state__message" role="alert">{{ errorMessage() }}</p>
-      <a routerLink="/candidate/applications" class="btn btn--secondary">Back to My Applications</a>
-    </div>
-  } @else {
-    <div class="page-header">
-      <a routerLink="/candidate/applications" class="back-link">← Back to My Applications</a>
-    </div>
+<div class="application-details-page">
+  <div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <a routerLink="/candidate/applications" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to My Applications
+      </a>
+    </nav>
 
-    <div class="card app-details-card">
-      <div class="app-details-header">
-        <h1 class="app-title">{{ application()?.jobTitle || ('Application for Job #' + application()?.jobId) }}</h1>
-        <app-application-status-badge [status]="application()!.jobApplicationStatus" />
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading application details...</p>
       </div>
-
-      <div class="app-timeline">
-        <div class="timeline-item">
-          <div class="timeline-label">Applied On</div>
-          <div class="timeline-value">{{ application()?.appliedAt | date:'fullDate' }} at {{ application()?.appliedAt | date:'shortTime' }}</div>
+    } @else if (isError() || !application()) {
+      <div class="card error-card">
+        <h3>Application Not Found</h3>
+        <p>{{ errorMessage() || 'The requested application could not be loaded.' }}</p>
+        <a routerLink="/candidate/applications" class="btn btn--secondary">Back to My Applications</a>
+      </div>
+    } @else {
+      @if (cancelSuccess()) {
+        <div class="alert alert--success mb-4" role="status">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Your application has been successfully cancelled.</span>
         </div>
-        @if (application()?.statusUpdatedAt && application()!.statusUpdatedAt !== application()!.appliedAt) {
-          <div class="timeline-item">
-            <div class="timeline-label">Last Updated</div>
-            <div class="timeline-value">{{ application()?.statusUpdatedAt | date:'fullDate' }} at {{ application()?.statusUpdatedAt | date:'shortTime' }}</div>
+      }
+
+      @if (cancelError()) {
+        <div class="alert alert--danger mb-4" role="alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ cancelError() }}</span>
+        </div>
+      }
+
+      <!-- Top Header Card -->
+      <section class="card app-header-card">
+        <div class="header-main">
+          <app-company-logo [name]="application()?.companyName || 'Company'" size="lg" />
+          <div class="header-content">
+            <div class="badge-row">
+              <span class="ref-badge">Application #{{ application()?.id }}</span>
+              <app-status-badge [status]="application()!.jobApplicationStatus" type="application" />
+            </div>
+            <h1 class="header-title">
+              <a [routerLink]="['/jobs', application()?.jobId]">
+                {{ application()?.jobTitle || ('Application for Job #' + application()?.jobId) }}
+              </a>
+            </h1>
+            <p class="header-subtitle">
+              <span class="company-name">{{ application()?.companyName || 'Company not provided' }}</span>
+              <span class="meta-dot">&bull;</span>
+              <span>Applied {{ application()?.appliedAt | date:'mediumDate' }}</span>
+            </p>
           </div>
-        }
-        @if (application()?.cancelledAt) {
-          <div class="timeline-item">
-            <div class="timeline-label">Cancelled On</div>
-            <div class="timeline-value">
-              {{ application()?.cancelledAt | date:'fullDate' }} at {{ application()?.cancelledAt | date:'shortTime' }}
+        </div>
+
+        <div class="header-actions">
+          <a [routerLink]="['/jobs', application()?.jobId]" class="btn btn--outline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span>View Job Post</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Interview records supplied by the recruiter -->
+      @if (application()!.interviews.length > 0) {
+        <section class="card interview-banner">
+          <div class="banner-heading">
+            <div class="banner-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div>
+              <h2 class="banner-title">Interview Details</h2>
+              <p class="banner-desc">Review the latest schedule, format, and recruiter instructions.</p>
             </div>
           </div>
-        }
-      </div>
 
-      @if (cancelSuccess()) {
-        <div class="alert alert--success" role="status">The application was cancelled.</div>
-      }
+          <div class="interviews-grid">
+            @for (interview of application()!.interviews; track interview.id) {
+              <div class="interview-item">
+                <div class="interview-meta">
+                  <span class="interview-time">
+                    {{ interview.scheduledAt | date:'fullDate' }} at {{ interview.scheduledAt | date:'shortTime' }}
+                  </span>
+                  <span class="interview-type-badge">{{ interview.interviewType }} &bull; {{ interview.durationMinutes }} mins</span>
+                  <span class="interview-type-badge">{{ interview.status }}</span>
+                </div>
 
-      @if (showCancelConfirmation()) {
-        <div class="cancel-confirmation" role="alertdialog" aria-labelledby="cancel-title" aria-describedby="cancel-description">
-          <h2 id="cancel-title">Cancel this application?</h2>
-          <p id="cancel-description">This action is available only while the application is Applied or Under Review.</p>
-          @if (cancelError()) {
-            <div class="alert alert--danger" role="alert">{{ cancelError() }}</div>
-          }
-          <div class="cancel-confirmation__actions">
-            <button class="btn btn--secondary" type="button" (click)="dismissCancellation()" [disabled]="isCancelling()">
-              Keep Application
-            </button>
-            <button
-              class="btn btn--danger"
-              type="button"
-              (click)="confirmCancellation()"
-              [disabled]="isCancelling()"
-              [attr.aria-busy]="isCancelling()"
-            >
-              {{ isCancelling() ? 'Cancelling...' : 'Confirm Cancellation' }}
-            </button>
+                @if (interview.meetingLink && interview.status !== 'Cancelled') {
+                  <a [href]="interview.meetingLink" target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--sm join-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    <span>Join Meeting</span>
+                  </a>
+                }
+
+                @if (interview.location) {
+                  <p class="interview-detail"><strong>Location:</strong> {{ interview.location }}</p>
+                }
+                @if (interview.notes) {
+                  <p class="interview-detail"><strong>Instructions:</strong> {{ interview.notes }}</p>
+                }
+              </div>
+            }
           </div>
-        </div>
+        </section>
       }
 
-      <div class="app-actions">
-        <a [routerLink]="['/jobs', application()?.jobId]" class="btn btn--secondary">View Original Job Post</a>
-        @if (application()?.submittedCvId) {
-          <button class="btn btn--secondary" type="button" (click)="downloadSubmittedCv()" [disabled]="isDownloadingCv()">
-            {{ isDownloadingCv() ? 'Downloading...' : 'Download ' + (application()?.submittedCvDisplayName || 'submitted CV') }}
-          </button>
-        }
-        
-        @if (application()?.jobApplicationStatus === AppStatus.Applied || application()?.jobApplicationStatus === AppStatus.UnderReview) {
-          <button 
-            class="btn btn--danger" 
-            (click)="requestCancellation()"
-            [disabled]="isCancelling() || showCancelConfirmation()">
-            Cancel Application
-          </button>
-        }
+      <!-- Main Layout -->
+      <div class="details-layout">
+        <main class="main-column">
+          <!-- Visual Stepper -->
+          <section class="card section-card">
+            <h2 class="section-title">Application Status Progress</h2>
+            <div class="stepper">
+              <div class="step-item completed">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Submitted</div>
+                <div class="step-time">{{ application()?.appliedAt | date:'shortDate' }}</div>
+              </div>
+              <div class="step-connector" [class.active]="application()!.jobApplicationStatus !== AppStatus.Applied"></div>
+
+              <div class="step-item" [class.completed]="application()!.jobApplicationStatus !== AppStatus.Applied && application()!.jobApplicationStatus !== AppStatus.Cancelled" [class.current]="application()!.jobApplicationStatus === AppStatus.UnderReview">
+                <div class="step-circle">2</div>
+                <div class="step-label">Under Review</div>
+              </div>
+              <div class="step-connector" [class.active]="application()!.jobApplicationStatus === AppStatus.Shortlisted || application()!.jobApplicationStatus === AppStatus.Interview || application()!.jobApplicationStatus === AppStatus.Accepted"></div>
+
+              <div class="step-item" [class.completed]="application()!.jobApplicationStatus === AppStatus.Shortlisted || application()!.jobApplicationStatus === AppStatus.Interview || application()!.jobApplicationStatus === AppStatus.Accepted" [class.current]="application()!.jobApplicationStatus === AppStatus.Interview">
+                <div class="step-circle">3</div>
+                <div class="step-label">Interview / Shortlist</div>
+              </div>
+              <div class="step-connector" [class.active]="application()!.jobApplicationStatus === AppStatus.Accepted || application()!.jobApplicationStatus === AppStatus.Rejected"></div>
+
+              <div class="step-item" [class.completed]="application()!.jobApplicationStatus === AppStatus.Accepted" [class.rejected]="application()!.jobApplicationStatus === AppStatus.Rejected">
+                <div class="step-circle">
+                  @if (application()!.jobApplicationStatus === AppStatus.Accepted) { ✓ }
+                  @else if (application()!.jobApplicationStatus === AppStatus.Rejected) { ✕ }
+                  @else { 4 }
+                </div>
+                <div class="step-label">Decision</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Status History Timeline -->
+          @if (application()!.statusHistory.length > 0) {
+            <section class="card section-card">
+              <h2 class="section-title">Activity Timeline</h2>
+              <ol class="timeline-list">
+                @for (entry of application()!.statusHistory; track entry.id) {
+                  <li class="timeline-node">
+                    <div class="node-marker"></div>
+                    <div class="node-content">
+                      <div class="node-header">
+                        <strong class="node-status">{{ statusLabels[entry.newStatus] }}</strong>
+                        <span class="node-date">{{ entry.changedAt | date:'medium' }}</span>
+                      </div>
+                      @if (entry.note) {
+                        <p class="node-note">{{ entry.note }}</p>
+                      }
+                    </div>
+                  </li>
+                }
+              </ol>
+            </section>
+          }
+
+          <!-- Submitted Cover Letter -->
+          @if (application()?.coverLetter) {
+            <section class="card section-card">
+              <h2 class="section-title">Cover Letter</h2>
+              <div class="cover-letter-box">
+                <p class="preserve-lines">{{ application()?.coverLetter }}</p>
+              </div>
+            </section>
+          }
+
+          <!-- Submitted Resume -->
+          @if (application()?.submittedCvId) {
+            <section class="card section-card">
+              <h2 class="section-title">Submitted Resume</h2>
+              <div class="cv-attachment-card">
+                <div class="cv-icon">PDF</div>
+                <div class="cv-info">
+                  <span class="cv-name">{{ application()?.submittedCvDisplayName || 'Resume' }}</span>
+                  <span class="cv-sub">{{ application()?.submittedCvFileName || 'Document' }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn--outline btn--sm"
+                  (click)="downloadSubmittedCv()"
+                  [disabled]="isDownloadingCv()"
+                >
+                  @if (isDownloadingCv()) {
+                    <span class="spinner"></span>
+                    <span>Opening...</span>
+                  } @else {
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download CV</span>
+                  }
+                </button>
+              </div>
+            </section>
+          }
+        </main>
+
+        <!-- Sidebar Column -->
+        <aside class="sidebar-column">
+          <!-- Summary Card -->
+          <div class="card meta-card">
+            <h3 class="meta-title">Application Summary</h3>
+            <dl class="meta-list">
+              <div class="meta-row">
+                <dt>Reference</dt>
+                <dd>#APP-{{ application()?.id }}</dd>
+              </div>
+              <div class="meta-row">
+                <dt>Submitted</dt>
+                <dd>{{ application()?.appliedAt | date:'mediumDate' }}</dd>
+              </div>
+              <div class="meta-row">
+                <dt>Last Update</dt>
+                <dd>{{ application()?.statusUpdatedAt | date:'mediumDate' }}</dd>
+              </div>
+              @if (application()?.cancelledAt) {
+                <div class="meta-row cancelled">
+                  <dt>Cancelled</dt>
+                  <dd>{{ application()?.cancelledAt | date:'mediumDate' }}</dd>
+                </div>
+              }
+            </dl>
+
+            <!-- Actions / Cancellation -->
+            @if (application()?.jobApplicationStatus === AppStatus.Applied || application()?.jobApplicationStatus === AppStatus.UnderReview) {
+              <div class="meta-actions">
+                @if (!showCancelConfirmation()) {
+                  <button
+                    type="button"
+                    class="btn btn--outline-danger w-full"
+                    (click)="requestCancellation()"
+                    [disabled]="isCancelling()"
+                  >
+                    Withdraw Application
+                  </button>
+                } @else {
+                  <div class="confirm-withdraw-box">
+                    <p class="confirm-prompt">Are you sure you want to withdraw this application?</p>
+                    <div class="confirm-btns">
+                      <button
+                        type="button"
+                        class="btn btn--outline btn--sm"
+                        (click)="dismissCancellation()"
+                        [disabled]="isCancelling()"
+                      >
+                        Keep
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--danger btn--sm"
+                        (click)="confirmCancellation()"
+                        [disabled]="isCancelling()"
+                      >
+                        {{ isCancelling() ? 'Withdrawing...' : 'Yes, Withdraw' }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Tips Card -->
+          <div class="card tips-card">
+            <h4>Application updates</h4>
+            <p>Status changes and interview details supplied by the recruiter appear in the activity timeline on this page.</p>
+          </div>
+        </aside>
       </div>
-    </div>
-  }
+    }
+  </div>
 </div>

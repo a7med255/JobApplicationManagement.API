@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy } from '@angular/core';
@@ -6,12 +6,14 @@ import { finalize } from 'rxjs';
 import { JobApplicationResponse } from '../../../core/models/application.models';
 import { ApplicationsService } from '../../../core/services/applications.service';
 import { ApiErrorService } from '../../../core/services/api-error.service';
-import { ApplicationStatusBadgeComponent } from '../../../shared/components/application-status-badge/application-status-badge.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-admin-applications',
   standalone: true,
-  imports: [DatePipe, RouterLink, ApplicationStatusBadgeComponent],
+  imports: [DatePipe, RouterLink, StatusBadgeComponent, EmptyStateComponent, PaginationComponent],
   templateUrl: './admin-applications.component.html',
   styleUrl: './admin-applications.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,6 +70,15 @@ export class AdminApplicationsComponent implements OnInit {
       this.pageNumber.update((page) => page - 1);
       this.loadApplications();
     }
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId.set(null);
+  }
+
+  onPageChange(page: number): void {
+    this.pageNumber.set(page);
+    this.loadApplications();
   }
 
   requestDelete(id: number): void {

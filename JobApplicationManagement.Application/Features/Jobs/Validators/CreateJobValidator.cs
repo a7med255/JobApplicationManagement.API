@@ -20,6 +20,7 @@ public class CreateJobValidator : AbstractValidator<CreateJobDto>
         RuleFor(x => x.ExperienceLevel).IsInEnum();
         RuleFor(x => x.MinimumYearsExperience).InclusiveBetween(0, 80);
         RuleFor(x => x.MaximumYearsExperience)
+            .InclusiveBetween(0, 80)
             .GreaterThanOrEqualTo(x => x.MinimumYearsExperience)
             .When(x => x.MaximumYearsExperience.HasValue);
         RuleFor(x => x.Responsibilities).NotEmpty().MaximumLength(10000);
@@ -28,6 +29,7 @@ public class CreateJobValidator : AbstractValidator<CreateJobDto>
         RuleFor(x => x.EducationRequirements).MaximumLength(5000);
         RuleFor(x => x.Benefits).MaximumLength(10000);
         RuleFor(x => x.MinimumSalary).GreaterThanOrEqualTo(0).When(x => x.MinimumSalary.HasValue);
+        RuleFor(x => x.MaximumSalary).GreaterThanOrEqualTo(0).When(x => x.MaximumSalary.HasValue);
         RuleFor(x => x.MaximumSalary)
             .GreaterThanOrEqualTo(x => x.MinimumSalary!.Value)
             .When(x => x.MinimumSalary.HasValue && x.MaximumSalary.HasValue);

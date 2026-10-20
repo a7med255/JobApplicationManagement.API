@@ -16,6 +16,9 @@ public static class JobAuthorizationHelper
         string operation,
         CancellationToken cancellationToken = default)
     {
+        if (!currentUserService.IsAuthenticated || string.IsNullOrWhiteSpace(currentUserService.UserId))
+            throw new UnauthorizedException("Authentication is required to perform this action.");
+
         var roles = currentUserService.Roles.ToList();
         if (roles.Contains(AdminRole))
             return;
